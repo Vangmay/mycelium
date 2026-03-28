@@ -47,9 +47,68 @@ export function applyDecay(store: DomainStore): DomainStore {
   return { ...store, hints }
 }
 
-export function filterHints(store: DomainStore): Hint[] {
-  return store.hints
-    .filter((h) => h.confidence >= config.minConfidence)
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, config.maxHints)
+// Type priority: flow shortcuts and blockers first, noise last
+const TYPE_PRIORITY: Record<string, number> = {
+  flow: 0,
+  blocker: 1,
+  auth: 2,
+  timing: 3,
+  selector: 4,
+  failure: 5,
+  rate_limit: 6,
+}
+
+export function filterHints(store: DomainStore, goal?: string): Hint[] {
+  const goalWords = goal
+    ? new Set(goal.toLowerCase().split(/\W+/).filter((w) => w.length > 3))
+    : new Set<string>()
+
+  // 1. Filter by minimum confidence
+  const eligible = store.hints.filter((h) => h.confidence >= config.minConfidence)
+
+  // 2. Score by goal relevance (keyword overlap with note + action)
+  const scored = eligible.map((h) => {
+    const text = `${h.note} ${h.action}`.toLowerCase()
+    const overlap = goalWords.size > 0
+      ? [...goalWords].filter((w) => text.includes(w)).length / goalWords.size
+      : 0
+    return { hint: h, score: h.confidence + overlap * 0.2 }
+  })
+
+  // Types where multiple hints can coexist (complementary, not redundant)
+  const MAX_PER_TYPE: Record<string, number> = {
+    flow: 2, timing: 1, failure: 2,
+    blocker: 1, auth: 1, selector: 1, rate_limit: 1,
+  }
+
+  // Drop timing hints that actively add delays — they slow the agent down
+  const DELAY_WORDS = /\b(waits?|delays?|longer|pause|sleep)\b/i
+  const withoutSlowHints = scored.filter(
+    (e) => e.hint.type !== "timing" || !DELAY_WORDS.test(e.hint.action)
+  )
+
+  // 3. Deduplicate by type — keep top N per type based on MAX_PER_TYPE
+  const byType = new Map<string, { hint: Hint; score: number }[]>()
+  for (const entry of withoutSlowHints) {
+    const bucket = byType.get(entry.hint.type) ?? []
+    bucket.push(entry)
+    byType.set(entry.hint.type, bucket)
+  }
+
+  const selected = [...byType.entries()].flatMap(([type, entries]) => {
+    const limit = MAX_PER_TYPE[type] ?? 1
+    return entries
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+  })
+
+  // 4. Sort by type priority, then score
+  return selected
+    .sort((a, b) => {
+      const pa = TYPE_PRIORITY[a.hint.type] ?? 99
+      const pb = TYPE_PRIORITY[b.hint.type] ?? 99
+      return pa !== pb ? pa - pb : b.score - a.score
+    })
+    .slice(0, 6)
+    .map((e) => e.hint)
 }

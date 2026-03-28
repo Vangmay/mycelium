@@ -1,0 +1,45 @@
+{
+  "domain": "linkedin.com",
+  "updated": "2026-03-28T06:40:13.645Z",
+  "runs": 2,
+  "successRate": 1,
+  "hints": [
+    {
+      "type": "flow",
+      "note": "Navigating through Google search first is faster than direct LinkedIn search.",
+      "action": "Always start with a DuckDuckGo search for company information instead of LinkedIn.",
+      "confidence": 0.75,
+      "id": "0e146bf8",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "timing",
+      "note": "LinkedIn pages may load slowly, increase waiting time before extraction.",
+      "action": "Implement a longer wait time when loading LinkedIn company pages.",
+      "confidence": 0.7,
+      "id": "22395763",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "selector",
+      "note": "Use specific SEO snippets for accurate employee count extraction.",
+      "action": "Target snippets containing 'employee count' from search results for reliability.",
+      "confidence": 0.68,
+      "id": "372a1148",
+      "seen": 1,
+      "last": "2026-03-28"
+    }
+  ],
+  "history": [
+    {
+      "ts": "2026-03-28T06:40:13.645Z",
+      "goal": "How many employees does Anthropic have",
+      "success": true,
+      "hintsUsed": 0,
+      "hintsAdded": 3,
+      "durationMs": 243447
+    }
+  ]
+}

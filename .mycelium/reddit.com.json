@@ -1,0 +1,70 @@
+{
+  "domain": "reddit.com",
+  "updated": "2026-03-28T06:33:31.102Z",
+  "runs": 7,
+  "successRate": 1,
+  "hints": [
+    {
+      "type": "flow",
+      "note": "Successful navigation involves multiple intermediate checks.",
+      "action": "Always reconfigure browser settings before navigating to Reddit.",
+      "confidence": 0.75,
+      "id": "9327ddd6",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "timing",
+      "note": "Loading times may vary significantly when accessing Reddit.",
+      "action": "Implement waits between navigation steps to avoid premature interactions.",
+      "confidence": 0.7,
+      "id": "ad04ab0e",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "flow",
+      "note": "Navigating directly to the top posts saves time in extracting comments.",
+      "action": "Always visit the MachineLearning subreddit top posts directly for efficiency.",
+      "confidence": 0.75,
+      "id": "25302051",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "flow",
+      "note": "Navigating to comments took multiple steps — direct access shortcut found.",
+      "action": "Click directly on the most upvoted post to view comments next time.",
+      "confidence": 0.7,
+      "id": "de452a6d",
+      "seen": 1,
+      "last": "2026-03-28"
+    }
+  ],
+  "history": [
+    {
+      "ts": "2026-03-28T06:10:57.599Z",
+      "goal": "What are the top comments on the most upvoted post in machinelearning this week",
+      "success": true,
+      "hintsUsed": 0,
+      "hintsAdded": 2,
+      "durationMs": 169961
+    },
+    {
+      "ts": "2026-03-28T06:33:31.102Z",
+      "goal": "What are the top comments on the most upvoted post in machinelearning this week",
+      "success": true,
+      "hintsUsed": 2,
+      "hintsAdded": 0,
+      "durationMs": 133858
+    },
+    {
+      "ts": "2026-03-28T06:13:21.518Z",
+      "goal": "What are the top comments on the most upvoted post in machinelearning this week",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 1,
+      "durationMs": 124853
+    }
+  ]
+}

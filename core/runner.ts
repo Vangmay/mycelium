@@ -24,7 +24,7 @@ export async function run(options: RunOptions): Promise<RunResult> {
   const domain = extractDomain(url)
 
   // Step 1: prime
-  const primed = prime(domain)
+  const primed = prime(domain, goal)
   if (!silent && primed.hintsLoaded > 0) {
     console.log(`  + ${primed.hintsLoaded} hint${primed.hintsLoaded > 1 ? "s" : ""} loaded for ${domain}`)
   } else if (!silent) {
