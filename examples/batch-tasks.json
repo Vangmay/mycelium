@@ -1,0 +1,22 @@
+[
+  {
+    "url": "amazon.com",
+    "goal": "Find the current price of Kindle Paperwhite 16GB",
+    "label": "Amazon — Kindle price"
+  },
+  {
+    "url": "amazon.com",
+    "goal": "Find the best-selling laptop under $1000",
+    "label": "Amazon — laptop search"
+  },
+  {
+    "url": "booking.com",
+    "goal": "Find hotels in Singapore available next weekend under $200",
+    "label": "Booking — Singapore hotels"
+  },
+  {
+    "url": "linkedin.com",
+    "goal": "Find job postings for senior TypeScript engineers in Singapore",
+    "label": "LinkedIn — TS engineer jobs"
+  }
+]
