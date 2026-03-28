@@ -1,7 +1,7 @@
 {
   "domain": "linkedin.com",
-  "updated": "2026-03-28T06:40:13.645Z",
-  "runs": 2,
+  "updated": "2026-03-28T06:59:56.644Z",
+  "runs": 4,
   "successRate": 1,
   "hints": [
     {
@@ -30,6 +30,24 @@
       "id": "372a1148",
       "seen": 1,
       "last": "2026-03-28"
+    },
+    {
+      "type": "flow",
+      "note": "Multiple searches on DuckDuckGo before finding the employee count on LinkedIn.",
+      "action": "Start with DuckDuckGo, then search directly for LinkedIn employee count for efficiency.",
+      "confidence": 0.7,
+      "id": "c76d7a0c",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "flow",
+      "note": "Using DuckDuckGo first is faster than visiting LinkedIn directly.",
+      "action": "Start by searching for the company on DuckDuckGo to find employee counts faster.",
+      "confidence": 0.75,
+      "id": "a8e73c0b",
+      "seen": 1,
+      "last": "2026-03-28"
     }
   ],
   "history": [
@@ -40,6 +58,22 @@
       "hintsUsed": 0,
       "hintsAdded": 3,
       "durationMs": 243447
+    },
+    {
+      "ts": "2026-03-28T06:56:16.259Z",
+      "goal": "How many employees does Anthropic have",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 1,
+      "durationMs": 153068
+    },
+    {
+      "ts": "2026-03-28T06:59:56.644Z",
+      "goal": "How many employees does Anthropic have",
+      "success": true,
+      "hintsUsed": 4,
+      "hintsAdded": 1,
+      "durationMs": 112134
     }
   ]
 }
