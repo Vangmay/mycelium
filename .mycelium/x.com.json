@@ -1,0 +1,45 @@
+{
+  "domain": "x.com",
+  "updated": "2026-03-28T07:08:48.934Z",
+  "runs": 1,
+  "successRate": 1,
+  "hints": [
+    {
+      "type": "flow",
+      "note": "Direct searches on x.com are not effective; use DuckDuckGo instead.",
+      "action": "Start using DuckDuckGo to search for recent posts rather than searching directly on x.com.",
+      "confidence": 0.75,
+      "id": "b6f8afdd",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "failure",
+      "note": "Accessing the Explore page on x.com did not yield useful results.",
+      "action": "Avoid using the Explore page on x.com for finding trending posts.",
+      "confidence": 0.7,
+      "id": "47394e73",
+      "seen": 1,
+      "last": "2026-03-28"
+    },
+    {
+      "type": "timing",
+      "note": "Certain tweets may take time to load or become visible.",
+      "action": "Implement wait times after page loads when searching for tweets.",
+      "confidence": 0.65,
+      "id": "974a12c9",
+      "seen": 1,
+      "last": "2026-03-28"
+    }
+  ],
+  "history": [
+    {
+      "ts": "2026-03-28T07:08:48.934Z",
+      "goal": "Find the most liked post about AI from the last 24 hours",
+      "success": true,
+      "hintsUsed": 0,
+      "hintsAdded": 3,
+      "durationMs": 420715
+    }
+  ]
+}
