@@ -1,7 +1,7 @@
 {
   "domain": "amazon.com",
-  "updated": "2026-03-28T03:18:01.228Z",
-  "runs": 5,
+  "updated": "2026-03-28T03:49:15.572Z",
+  "runs": 10,
   "successRate": 0.6,
   "hints": [
     {
@@ -9,7 +9,7 @@
       "note": "cookie consent banner blocks navigation",
       "action": "dismiss cookie banner with #sp-cc-accept before any interaction",
       "confidence": 0.65,
-      "id": "5756f0a4",
+      "id": "a6b61f5a",
       "seen": 1,
       "last": "2026-03-28"
     },
@@ -17,9 +17,9 @@
       "type": "timing",
       "note": "price element lazy-loads after initial render",
       "action": "wait for .a-price to appear in DOM before extracting price data",
-      "confidence": 0.8000000000000002,
-      "id": "e2664061",
-      "seen": 4,
+      "confidence": 0.8500000000000002,
+      "id": "d2fa0e72",
+      "seen": 5,
       "last": "2026-03-28"
     },
     {
@@ -27,51 +27,91 @@
       "note": "target element not immediately present — may require wait",
       "action": "wait up to 5s for target element before declaring extraction failure",
       "confidence": 0.65,
-      "id": "a17d46c7",
+      "id": "2ab3e2eb",
       "seen": 1,
       "last": "2026-03-28"
     }
   ],
   "history": [
     {
-      "ts": "2026-03-28T03:17:58.014Z",
-      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "ts": "2026-03-28T03:32:54.735Z",
+      "goal": "find Kindle price",
       "success": false,
       "hintsUsed": 0,
       "hintsAdded": 1,
       "durationMs": 0
     },
     {
-      "ts": "2026-03-28T03:17:58.818Z",
-      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "ts": "2026-03-28T03:33:02.592Z",
+      "goal": "find Kindle price",
       "success": false,
       "hintsUsed": 1,
       "hintsAdded": 2,
       "durationMs": 0
     },
     {
-      "ts": "2026-03-28T03:17:59.622Z",
-      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "ts": "2026-03-28T03:33:11.715Z",
+      "goal": "find Kindle price",
       "success": true,
       "hintsUsed": 3,
       "hintsAdded": 1,
       "durationMs": 0
     },
     {
-      "ts": "2026-03-28T03:18:00.425Z",
-      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "ts": "2026-03-28T03:33:43.811Z",
+      "goal": "find Kindle price",
       "success": true,
       "hintsUsed": 3,
       "hintsAdded": 1,
-      "durationMs": 1
+      "durationMs": 0
     },
     {
-      "ts": "2026-03-28T03:18:01.228Z",
-      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "ts": "2026-03-28T03:33:45.743Z",
+      "goal": "find Kindle price",
       "success": true,
       "hintsUsed": 3,
       "hintsAdded": 1,
-      "durationMs": 1
+      "durationMs": 0
+    },
+    {
+      "ts": "2026-03-28T03:35:38.489Z",
+      "goal": "find ps4 price",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 1,
+      "durationMs": 0
+    },
+    {
+      "ts": "2026-03-28T03:42:10.039Z",
+      "goal": "find Kindle price",
+      "success": false,
+      "hintsUsed": 3,
+      "hintsAdded": 0,
+      "durationMs": 175810
+    },
+    {
+      "ts": "2026-03-28T03:44:54.293Z",
+      "goal": "find Kindle price",
+      "success": false,
+      "hintsUsed": 3,
+      "hintsAdded": 0,
+      "durationMs": 98616
+    },
+    {
+      "ts": "2026-03-28T03:47:02.469Z",
+      "goal": "find Kindle price",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 0,
+      "durationMs": 100908
+    },
+    {
+      "ts": "2026-03-28T03:49:15.572Z",
+      "goal": "find Kindle price",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 0,
+      "durationMs": 84742
     }
   ]
 }

@@ -67,11 +67,12 @@ async function callTinyFish(
       "Content-Type": "application/json",
       "X-API-Key": apiKey,
     },
-    body: JSON.stringify({ url, goal }),
+    body: JSON.stringify({ url: url.startsWith("http") ? url : `https://${url}`, goal }),
   })
 
   if (!response.ok) {
-    throw new Error(`TinyFish API error: ${response.status} ${response.statusText}`)
+    const body = await response.text().catch(() => "")
+    throw new Error(`TinyFish API error: ${response.status} ${response.statusText}\n${body}`)
   }
 
   const steps: string[] = []
@@ -95,18 +96,19 @@ async function callTinyFish(
     const lines = chunk.split("\n")
     for (const line of lines) {
       if (!line.startsWith("data: ")) continue
+      if (process.env.MYCELIUM_DEBUG) console.log("[SSE RAW]", line.slice(6))
       try {
         const event = JSON.parse(line.slice(6))
-        if (event.type === "step" && event.description) {
-          steps.push(event.description)
-          if (!silent) process.stdout.write(`  · ${event.description}\n`)
+        if (event.type === "PROGRESS" && event.purpose) {
+          steps.push(event.purpose)
+          if (!silent) process.stdout.write(`  · ${event.purpose}\n`)
         }
-        if (event.type === "error" && event.message) {
+        if (event.type === "FAILED" && event.message) {
           errors.push(event.message)
         }
-        if (event.type === "result") {
-          data = event.data ?? event.result
-          success = true
+        if (event.type === "COMPLETE") {
+          data = event.result ?? event.data
+          success = event.status === "COMPLETED"
         }
       } catch {
         // non-JSON SSE line, skip
