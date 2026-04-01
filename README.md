@@ -47,10 +47,6 @@ npm run demo
 
 ## Quick start — SDK
 
-```bash
-npm install mycelium
-```
-
 ```typescript
 import 'dotenv/config'
 import { run } from "mycelium"
