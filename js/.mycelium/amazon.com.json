@@ -1,17 +1,77 @@
 {
   "domain": "amazon.com",
-  "updated": "2026-04-20T02:58:07.181Z",
-  "runs": 1,
-  "successRate": 1,
-  "hints": [],
+  "updated": "2026-04-20T06:10:49.804Z",
+  "runs": 5,
+  "successRate": 0.6,
+  "hints": [
+    {
+      "type": "blocker",
+      "note": "cookie consent banner blocks navigation",
+      "action": "dismiss cookie banner with #sp-cc-accept before any interaction",
+      "confidence": 0.65,
+      "id": "838c715e",
+      "seen": 1,
+      "last": "2026-04-20"
+    },
+    {
+      "type": "timing",
+      "note": "price element lazy-loads after initial render",
+      "action": "wait for .a-price to appear in DOM before extracting price data",
+      "confidence": 0.8000000000000002,
+      "id": "6dfe1124",
+      "seen": 4,
+      "last": "2026-04-20"
+    },
+    {
+      "type": "timing",
+      "note": "target element not immediately present — may require wait",
+      "action": "wait up to 5s for target element before declaring extraction failure",
+      "confidence": 0.65,
+      "id": "d09f796f",
+      "seen": 1,
+      "last": "2026-04-20"
+    }
+  ],
   "history": [
     {
-      "ts": "2026-04-20T02:58:07.181Z",
-      "goal": "find the price of Kindle Paperwhite 16GB",
-      "success": true,
+      "ts": "2026-04-20T06:10:46.593Z",
+      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "success": false,
       "hintsUsed": 0,
-      "hintsAdded": 0,
-      "durationMs": 112687
+      "hintsAdded": 1,
+      "durationMs": 0
+    },
+    {
+      "ts": "2026-04-20T06:10:47.397Z",
+      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "success": false,
+      "hintsUsed": 1,
+      "hintsAdded": 2,
+      "durationMs": 1
+    },
+    {
+      "ts": "2026-04-20T06:10:48.200Z",
+      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 1,
+      "durationMs": 1
+    },
+    {
+      "ts": "2026-04-20T06:10:49.002Z",
+      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 1,
+      "durationMs": 0
+    },
+    {
+      "ts": "2026-04-20T06:10:49.804Z",
+      "goal": "Find the current price of Kindle Paperwhite 16GB",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 1,
+      "durationMs": 0
     }
   ]
 }
