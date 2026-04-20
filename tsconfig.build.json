@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": [
+    "index.ts",
+    "mycelium.config.ts",
+    "core/**/*.ts",
+    "store/**/*.ts",
+    "cli/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "demo",
+    "examples",
+    "public",
+    "server.ts"
+  ]
+}

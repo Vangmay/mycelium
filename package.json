@@ -3,15 +3,33 @@
   "version": "0.1.0",
   "description": "Self-improving memory layer for TinyFish web agents",
   "type": "module",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
-    "myc": "./cli/index.ts"
+    "myc": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "run:cli": "tsx cli/index.ts",
     "demo": "tsx demo/run-demo.ts",
     "demo:mock": "MYCELIUM_MOCK=1 tsx demo/run-demo.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli/index.js",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

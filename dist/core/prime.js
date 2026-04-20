@@ -1,0 +1,31 @@
+import { readStore, applyDecay, filterHints } from "../store/reader.js";
+export function prime(domain, goal) {
+    const raw = readStore(domain);
+    const decayed = applyDecay(raw);
+    const hints = filterHints(decayed, goal);
+    if (hints.length === 0) {
+        return { domain, hintsLoaded: 0, promptBlock: "" };
+    }
+    const lines = hints.map((h) => formatHint(h));
+    const promptBlock = [
+        `IMPORTANT — KNOWN HINTS FOR ${domain} (follow these, do not rediscover):`,
+        ...lines,
+        "",
+    ].join("\n");
+    return { domain, hintsLoaded: hints.length, promptBlock };
+}
+function formatHint(h) {
+    const conf = Math.round(h.confidence * 100);
+    const prefix = h.type === "flow" ? `- [SHORTCUT, ${conf}% confident]` : `- [${conf}% confident]`;
+    return `${prefix} ${h.note} → ${h.action}`;
+}
+const STOP_RULES = `RULES:
+- Follow the hints above — do not rediscover what is already known
+- If a hint redirects you to a different site or method, go there directly without attempting the original first
+- If you hit a login wall, cookie banner, or access block that has no hint: stop and return what you have, do not retry`;
+export function buildGoal(originalGoal, primeResult) {
+    if (!primeResult.promptBlock)
+        return originalGoal;
+    return `${primeResult.promptBlock}\n${STOP_RULES}\n\nTASK: ${originalGoal}`;
+}
+//# sourceMappingURL=prime.js.map

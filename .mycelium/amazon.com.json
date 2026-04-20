@@ -1,0 +1,17 @@
+{
+  "domain": "amazon.com",
+  "updated": "2026-04-20T02:58:07.181Z",
+  "runs": 1,
+  "successRate": 1,
+  "hints": [],
+  "history": [
+    {
+      "ts": "2026-04-20T02:58:07.181Z",
+      "goal": "find the price of Kindle Paperwhite 16GB",
+      "success": true,
+      "hintsUsed": 0,
+      "hintsAdded": 0,
+      "durationMs": 112687
+    }
+  ]
+}

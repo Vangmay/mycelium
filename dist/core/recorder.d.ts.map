@@ -1,0 +1,1 @@
+{"version":3,"file":"recorder.d.ts","sourceRoot":"","sources":["../../core/recorder.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAQ,UAAU,EAAE,MAAM,mBAAmB,CAAA;AAuCzD,MAAM,WAAW,YAAY;IAC3B,cAAc,EAAE,MAAM,CAAA;IACtB,UAAU,EAAE,MAAM,CAAA;CACnB;AAED,wBAAsB,MAAM,CAAC,OAAO,EAAE,UAAU,GAAG,OAAO,CAAC,YAAY,CAAC,CA0DvE"}
