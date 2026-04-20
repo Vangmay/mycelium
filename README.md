@@ -13,88 +13,64 @@ Every TinyFish API call starts cold. Mycelium fixes this with two functions:
 
 Expertise compounds across sessions. The agent gets smarter every run, on your specific domains.
 
-## Quick start — CLI
+## Repository layout
+
+```
+.
+├── js/          JavaScript / TypeScript SDK and `myc` CLI (published as `mycelium` on npm)
+├── python/      Python SDK (published as `mycelium-sdk` on PyPI)
+├── server/      Web UI that runs on top of the JS SDK
+└── package.json Root scripts that delegate to js/ for convenience
+```
+
+The two SDKs share one on-disk format (`.mycelium/<domain>.json`) so Node and Python agents can read/write the same store.
+
+## Quick start
 
 ```bash
-# 1. clone and install
 git clone https://github.com/you/mycelium
 cd mycelium
-npm install
+cp .env.example .env               # fill in TINYFISH_API_KEY + OPENAI_API_KEY
+npm run install:js                 # installs JS deps
 
-# 2. configure keys
-cp .env.example .env
-# edit .env and fill in TINYFISH_API_KEY and OPENAI_API_KEY
-
-# 3. run your first agent
-npx tsx cli/index.ts run amazon.com "find the price of Kindle Paperwhite"
-
-# 4. see what it learned
-npx tsx cli/index.ts inspect amazon.com
-
-# 5. run again — it loads the hints from step 3
-npx tsx cli/index.ts run amazon.com "find the price of Kindle Paperwhite"
-```
-
-## Demo mode (no API credits needed)
-
-```bash
-# rehearse the full 5-session learning arc offline
+# Demo — no API credits needed
 npm run demo:mock
 
-# run for real
-npm run demo
+# Real run via the CLI
+npm run cli -- run amazon.com "find the price of Kindle Paperwhite"
+npm run cli -- inspect amazon.com
 ```
 
-## Quick start — SDK
+For the JS SDK API, CLI commands, and publish instructions see [js/README.md](js/README.md).
+For Python, see [python/README.md](python/README.md).
 
-```typescript
-import 'dotenv/config'
-import { run } from "mycelium"
+## Root-level scripts
 
-// one import, one rename — result shape identical to TinyFish
-const result = await run({
-  url: "amazon.com",
-  goal: "find the price of Kindle Paperwhite",
-})
+All forward to `js/`:
 
-console.log(result.data)            // TinyFish response
-console.log(result.primed.hintsLoaded)   // hints loaded this run
-console.log(result.recorded.hintsTotal)  // total hints in store
-```
-
-## CLI commands
-
-| Command | Description |
-|---------|-------------|
-| `npx tsx cli/index.ts run <url> <goal>` | Run with priming and auto-recording |
-| `npx tsx cli/index.ts inspect <domain>` | Coloured knowledge store view |
-| `npx tsx cli/index.ts stats [--all]` | Success rate trend |
-| `npx tsx cli/index.ts history <domain>` | Timestamped run timeline |
-| `npx tsx cli/index.ts replay <domain>` | Re-run recent goals |
-| `npx tsx cli/index.ts batch <file>` | Multi-domain batch from JSON |
-| `npx tsx cli/index.ts clear <domain>` | Wipe domain store |
+| Command | What it runs |
+|---------|--------------|
+| `npm run install:js` | `npm install` inside `js/` |
+| `npm run demo` | `tsx demo/run-demo.ts` (real API calls) |
+| `npm run demo:mock` | `MYCELIUM_MOCK=1 tsx demo/run-demo.ts` |
+| `npm run cli -- <args>` | `tsx cli/index.ts <args>` |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run build` | Build publishable `dist/` in `js/` |
+| `npm run server` | Start the web UI (`server/server.ts`) |
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in your keys:
+One `.env` at the repo root is loaded by both SDKs:
 
 ```bash
-cp .env.example .env
-```
-
-Optional `mycelium.config.ts` for store behaviour:
-
-```typescript
-export default {
-  storePath:     "./.mycelium", // where domain JSON files live
-  decayDays:     14,            // days before confidence halves
-  minConfidence: 0.6,           // minimum score to inject a hint
-  maxHints:      10,            // max hints injected per session
-}
+TINYFISH_API_KEY=   # required for real runs
+OPENAI_API_KEY=     # required for hint extraction
+MYCELIUM_MOCK=1     # skip both APIs and use deterministic mocks
+MYCELIUM_STORE_PATH=./js/.mycelium   # override the default store location
 ```
 
 ## Team sharing
 
-Commit `.mycelium/` to your repository. Git is the sync mechanism — no server needed. What one developer's agent learns on Monday, the whole team benefits from on Tuesday.
+Commit `js/.mycelium/` (or whichever `MYCELIUM_STORE_PATH` you use). Git is the sync mechanism — no server needed. What one developer's agent learns on Monday, the whole team benefits from on Tuesday.
 
 ## Built for TinyFish SG Hackathon 2026
