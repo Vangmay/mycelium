@@ -8,7 +8,7 @@
  * Open http://localhost:3000
  */
 
-import 'dotenv/config'
+import "../js/load-env.ts"
 import express from 'express'
 import { readdir, readFile, unlink } from 'fs/promises'
 import { join } from 'path'

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import 'dotenv/config'
+import "../load-env.ts"
 import { Command } from "commander"
 import { cmdRun } from "./run.ts"
 import { cmdInspect } from "./inspect.ts"

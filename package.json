@@ -1,0 +1,15 @@
+{
+  "name": "mycelium-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo root for Mycelium — JS SDK+CLI (js/), Python SDK (python/), and web UI (server/)",
+  "scripts": {
+    "install:js": "npm --prefix js install",
+    "demo": "npm --prefix js run demo",
+    "demo:mock": "npm --prefix js run demo:mock",
+    "typecheck": "npm --prefix js run typecheck",
+    "build": "npm --prefix js run build",
+    "cli": "npm --prefix js run run:cli --",
+    "server": "cd js && npx tsx ../server/server.ts"
+  }
+}

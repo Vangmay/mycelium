@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import 'dotenv/config'
+import "../load-env.ts"
 // Mycelium hackathon demo — 5-session learning arc
 // Usage:
 //   MYCELIUM_MOCK=1 npx tsx demo/run-demo.ts     (no API credits needed)
