@@ -1,6 +1,7 @@
 """Mycelium — self-improving memory layer for TinyFish web agents."""
 
 from .prime import build_goal, prime
+from .recorder import record
 from .types import (
     DomainStore,
     Hint,
@@ -23,6 +24,7 @@ __all__ = [
     "RunResult",
     "build_goal",
     "prime",
+    "record",
 ]
 
 __version__ = "0.1.0"
