@@ -12,11 +12,11 @@ import 'dotenv/config'
 import express from 'express'
 import { readdir, readFile, unlink } from 'fs/promises'
 import { join } from 'path'
-import config from './mycelium.config.ts'
-import { prime, buildGoal } from './core/prime.ts'
-import { record } from './core/recorder.ts'
-import { MOCK_ENABLED, getMockResponse } from './core/mock.ts'
-import type { RunOutcome } from './store/types.ts'
+import config from '../js/mycelium.config.ts'
+import { prime, buildGoal } from '../js/core/prime.ts'
+import { record } from '../js/core/recorder.ts'
+import { MOCK_ENABLED, getMockResponse } from '../js/core/mock.ts'
+import type { RunOutcome } from '../js/store/types.ts'
 
 const app = express()
 app.use(express.json())

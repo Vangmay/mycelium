@@ -6,7 +6,7 @@ export interface MyceliumConfig {
 }
 
 const config: MyceliumConfig = {
-  storePath: "./.mycelium",
+  storePath: process.env.MYCELIUM_STORE_PATH ?? "./.mycelium",
   decayDays: 14,
   minConfidence: 0.6,
   maxHints: 10,

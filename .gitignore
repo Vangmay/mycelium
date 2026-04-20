@@ -1,5 +1,7 @@
 node_modules/
 .env
+dist/
+*.tgz
 
 # Keep .mycelium/ committed for team knowledge sharing (recommended)
 # Uncomment the line below to exclude it for solo use instead:
