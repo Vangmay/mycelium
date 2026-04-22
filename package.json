@@ -6,7 +6,6 @@
   "scripts": {
     "install:js": "npm --prefix js install",
     "demo": "npm --prefix js run demo",
-    "demo:mock": "npm --prefix js run demo:mock",
     "typecheck": "npm --prefix js run typecheck",
     "build": "npm --prefix js run build",
     "cli": "npm --prefix js run run:cli --",

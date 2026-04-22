@@ -2,7 +2,6 @@ import OpenAI from "openai"
 import type { Hint, RunOutcome } from "../store/types.ts"
 import { readStore, applyDecay } from "../store/reader.ts"
 import { mergeHints, updateRunStats, writeStore } from "../store/writer.ts"
-import { MOCK_ENABLED, getMockHints } from "./mock.ts"
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -60,27 +59,23 @@ export async function record(outcome: RunOutcome): Promise<RecordResult> {
 
   let newHints: Hint[] = []
 
-  if (MOCK_ENABLED) {
-    newHints = getMockHints(steps, errors) as Hint[]
-  } else {
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        max_tokens: 800,
-        messages: [
-          { role: "system", content: EXTRACT_SYSTEM },
-          { role: "user", content: summary },
-        ],
-      })
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 800,
+      messages: [
+        { role: "system", content: EXTRACT_SYSTEM },
+        { role: "user", content: summary },
+      ],
+    })
 
-      const text = response.choices[0]?.message?.content ?? "[]"
-      if (process.env.MYCELIUM_DEBUG) console.log("[RECORDER GPT]", text)
-      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim())
-      newHints = Array.isArray(parsed) ? parsed : []
-    } catch (e) {
-      if (process.env.MYCELIUM_DEBUG) console.log("[RECORDER ERROR]", e)
-      newHints = []
-    }
+    const text = response.choices[0]?.message?.content ?? "[]"
+    if (process.env.MYCELIUM_DEBUG) console.log("[RECORDER GPT]", text)
+    const parsed = JSON.parse(text.replace(/```json|```/g, "").trim())
+    newHints = Array.isArray(parsed) ? parsed : []
+  } catch (e) {
+    if (process.env.MYCELIUM_DEBUG) console.log("[RECORDER ERROR]", e)
+    newHints = []
   }
 
   // Read, decay, merge, update stats, write

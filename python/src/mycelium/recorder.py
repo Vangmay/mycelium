@@ -5,7 +5,6 @@ import os
 import re
 from typing import Any
 
-from .mock import MOCK_ENABLED, get_mock_hints
 from .store import apply_decay, merge_hints, read_store, update_run_stats, write_store
 from .types import RecordResult, RunOutcome
 
@@ -90,10 +89,7 @@ def record(outcome: RunOutcome) -> RecordResult:
     summary_lines.append(f"Agent response excerpt:\n{outcome.raw[:2000]}")
     summary = "\n".join(summary_lines)
 
-    if MOCK_ENABLED:
-        new_hints = get_mock_hints(outcome.steps, outcome.errors)
-    else:
-        new_hints = _extract_hints_via_openai(summary)
+    new_hints = _extract_hints_via_openai(summary)
 
     store = apply_decay(read_store(outcome.domain))
     hints_used = sum(1 for h in store.hints if h.confidence >= 0.6)

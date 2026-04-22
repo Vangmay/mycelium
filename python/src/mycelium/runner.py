@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
-from .mock import MOCK_ENABLED, get_mock_response
 from .prime import build_goal, prime
 from .recorder import record
 from .types import RunOutcome, RunResult
@@ -110,12 +109,8 @@ def run(url: str, goal: str, *, silent: bool = False) -> RunResult:
 
     enriched = build_goal(goal, primed)
     t0 = time.monotonic()
-    if MOCK_ENABLED:
-        mock = get_mock_response(domain, goal)
-        success, data, raw, steps, errors = mock.success, mock.data, mock.raw, mock.steps, mock.errors
-    else:
-        tf = _call_tinyfish(url, enriched, silent)
-        success, data, raw, steps, errors = tf.success, tf.data, tf.raw, tf.steps, tf.errors
+    tf = _call_tinyfish(url, enriched, silent)
+    success, data, raw, steps, errors = tf.success, tf.data, tf.raw, tf.steps, tf.errors
     duration_ms = int((time.monotonic() - t0) * 1000)
 
     outcome = RunOutcome(

@@ -1,10 +1,7 @@
 #!/usr/bin/env tsx
 import "../load-env.ts"
 // Mycelium hackathon demo — 5-session learning arc
-// Usage:
-//   MYCELIUM_MOCK=1 npx tsx demo/run-demo.ts     (no API credits needed)
-//   npx tsx demo/run-demo.ts                      (real TinyFish calls)
-//   npm run demo:mock                             (shorthand)
+// Usage: npx tsx demo/run-demo.ts
 
 import { run } from "../core/runner.ts"
 import { cmdInspect } from "../cli/inspect.ts"
@@ -38,10 +35,6 @@ async function main() {
   console.log("\n  Mycelium — hackathon demo")
   console.log(`  domain: ${DEMO_DOMAIN}`)
   console.log(`  goal:   ${DEMO_GOAL}`)
-  if (process.env.MYCELIUM_MOCK === "1") {
-    console.log("  mode:   mock (set MYCELIUM_MOCK=0 for real TinyFish calls)")
-  }
-
   // Clear any existing store so demo starts fresh
   cmdClear(DEMO_DOMAIN)
 

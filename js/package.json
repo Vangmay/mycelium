@@ -26,7 +26,6 @@
   "scripts": {
     "run:cli": "tsx cli/index.ts",
     "demo": "tsx demo/run-demo.ts",
-    "demo:mock": "MYCELIUM_MOCK=1 tsx demo/run-demo.ts",
     "typecheck": "tsc --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli/index.js",
     "prepublishOnly": "npm run build"

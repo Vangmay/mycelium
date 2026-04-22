@@ -1,6 +1,5 @@
 import { prime, buildGoal } from "./prime.ts"
 import { record } from "./recorder.ts"
-import { MOCK_ENABLED, getMockResponse } from "./mock.ts"
 import type { RunOutcome } from "../store/types.ts"
 import type { PrimeResult } from "./prime.ts"
 import type { RecordResult } from "./recorder.ts"
@@ -31,12 +30,10 @@ export async function run(options: RunOptions): Promise<RunResult> {
     console.log(`  no knowledge found for ${domain} — starting fresh`)
   }
 
-  // Step 2: call TinyFish (or mock)
+  // Step 2: call TinyFish
   const enrichedGoal = buildGoal(goal, primed)
   const t0 = Date.now()
-  const { success, data, raw, steps, errors } = MOCK_ENABLED
-    ? getMockResponse(domain, goal)
-    : await callTinyFish(url, enrichedGoal, silent)
+  const { success, data, raw, steps, errors } = await callTinyFish(url, enrichedGoal, silent)
   const durationMs = Date.now() - t0
 
   // Step 3: record

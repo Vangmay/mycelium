@@ -1,8 +1,8 @@
 {
   "domain": "amazon.com",
-  "updated": "2026-04-20T06:10:49.804Z",
-  "runs": 5,
-  "successRate": 0.6,
+  "updated": "2026-04-22T15:02:28.728Z",
+  "runs": 6,
+  "successRate": 0.6666666666666666,
   "hints": [
     {
       "type": "blocker",
@@ -72,6 +72,14 @@
       "hintsUsed": 3,
       "hintsAdded": 1,
       "durationMs": 0
+    },
+    {
+      "ts": "2026-04-22T15:02:28.729Z",
+      "goal": "find the price of Kindle Paperwhite",
+      "success": true,
+      "hintsUsed": 3,
+      "hintsAdded": 0,
+      "durationMs": 88110
     }
   ]
 }
