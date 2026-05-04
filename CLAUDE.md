@@ -34,7 +34,7 @@ The store is plain JSON. No database, no server, no model training.
 npm run install:js         # install JS deps
 npm run demo:mock          # offline demo, no API credits
 npm run demo               # real API calls
-npm run cli -- run <url> <goal>
+npm run tools -- run <url> <goal>
 npm run typecheck
 npm run build              # produces js/dist/
 ```
@@ -56,20 +56,20 @@ MYCELIUM_MOCK=1     # set to skip TinyFish + OpenAI calls entirely
 MYCELIUM_STORE_PATH=./js/.mycelium   # override default store location
 ```
 
-**Never load dotenv in library files** (`js/core/`, `js/store/`). Only entry points (`js/cli/index.ts`, `js/demo/run-demo.ts`, `server/server.ts`) load env via `load-env.ts`.
+**Never load dotenv in library files** (`js/core/`, `js/store/`). Only entry points (`js/tools/index.ts`, `js/demo/run-demo.ts`, `server/server.ts`) load env via `load-env.ts`.
 
 ## Commands
 
 All runnable from the repo root via `npm run …`, or from inside `js/` with the same names (without `--`):
 
 ```bash
-npm run cli -- run <url> <goal>      # run with prime + record
-npm run cli -- inspect <domain>      # coloured knowledge store view
-npm run cli -- stats [--all]         # success rate trend
-npm run cli -- history <domain>      # timestamped run timeline
-npm run cli -- replay <domain>       # re-run recent goals
-npm run cli -- batch <file>          # multi-domain run from JSON
-npm run cli -- clear <domain>        # wipe domain store
+npm run tools -- run <url> <goal>    # run with prime + record
+npm run tools -- inspect <domain>    # coloured knowledge store view
+npm run tools -- stats [--all]       # success rate trend
+npm run tools -- history <domain>    # timestamped run timeline
+npm run tools -- replay <domain>     # re-run recent goals
+npm run tools -- batch <file>        # multi-domain run from JSON
+npm run tools -- clear <domain>      # wipe domain store
 ```
 
 ## Project structure (JS)
@@ -88,7 +88,7 @@ js/
 │   ├── types.ts          # Hint, DomainStore, RunOutcome, ...
 │   ├── reader.ts         # readStore, applyDecay, filterHints
 │   └── writer.ts         # mergeHints, updateRunStats, writeStore
-├── cli/                  # commander subcommands
+├── tools/                # optional local inspection/debugging wrappers
 ├── demo/                 # 5-session hackathon demo arc
 ├── examples/             # basic-sdk.ts, advanced-sdk.ts, basic-cli.sh, batch-tasks.json
 └── .mycelium/            # default store location for dev
@@ -184,17 +184,17 @@ Set `MYCELIUM_DEBUG=1` to print raw SSE lines if a real run returns no data.
 
 Default `./.mycelium/` relative to cwd. Override via `MYCELIUM_STORE_PATH`. The existing dev data lives at `js/.mycelium/`, so running from `js/` (or via the root-level npm scripts, which chain into `js/`) picks it up automatically.
 
-## Adding a new CLI command
+## Adding a new local tool command
 
-1. Create `js/cli/<name>.ts` — export `async function cmd<Name>(args) {}`
-2. Import and register in `js/cli/index.ts` using `program.command(...).action(cmd<Name>)`
-3. Implement using existing `js/core/` and `js/store/` functions — no logic in the CLI file
+1. Create `js/tools/<name>.ts` — export `async function cmd<Name>(args) {}`
+2. Import and register in `js/tools/index.ts` using `program.command(...).action(cmd<Name>)`
+3. Implement using existing `js/core/` and `js/store/` functions — no product logic in the tool wrapper
 
 ## Adding a new hint type
 
 1. Add the new type to the `HintType` union in `js/store/types.ts` **and** the `HintType` literal in `python/src/mycelium/types.py`
 2. Add a description line to the `EXTRACT_SYSTEM` prompt in `js/core/recorder.ts` and `python/src/mycelium/recorder.py`
-3. Add a colour entry in `js/cli/inspect.ts` TYPE_COLOURS map
+3. Add a colour entry in `js/tools/inspect.ts` TYPE_COLOURS map
 4. Add a friction entry in `js/core/mock.ts` MOCK_HINTS (and `python/src/mycelium/mock.py`) if you want mock support
 
 ## SDK usage

@@ -13,7 +13,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "myc": "./dist/cli/index.js"
+    "myc": "./dist/tools/index.js"
   },
   "files": [
     "dist",
@@ -24,10 +24,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "run:cli": "tsx cli/index.ts",
+    "run:tools": "tsx tools/index.ts",
     "demo": "tsx demo/run-demo.ts",
     "typecheck": "tsc --noEmit",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli/index.js",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/tools/index.js",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

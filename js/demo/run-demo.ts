@@ -4,9 +4,9 @@ import "../load-env.ts"
 // Usage: npx tsx demo/run-demo.ts
 
 import { run } from "../core/runner.ts"
-import { cmdInspect } from "../cli/inspect.ts"
-import { cmdStats } from "../cli/stats.ts"
-import { cmdClear } from "../cli/clear.ts"
+import { cmdInspect } from "../tools/inspect.ts"
+import { cmdStats } from "../tools/stats.ts"
+import { cmdClear } from "../tools/clear.ts"
 
 const DEMO_DOMAIN = "amazon.com"
 const DEMO_GOAL   = "Find the current price of Kindle Paperwhite 16GB"

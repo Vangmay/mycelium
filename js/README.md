@@ -1,6 +1,6 @@
 # mycelium (JavaScript / TypeScript)
 
-JS SDK and `myc` CLI for Mycelium. Published as `mycelium` on npm.
+JS SDK for Mycelium, with optional local `myc` tools for inspection and debugging. Published as `mycelium` on npm.
 
 ## Install
 
@@ -45,17 +45,15 @@ await record({
 })
 ```
 
-## CLI
+## Local tools
 
 ```bash
-npx myc run <url> <goal>       # run with priming + auto-recording
 npx myc inspect <domain>       # coloured knowledge store view
 npx myc stats [--all]          # success rate trend
-npx myc history <domain>       # run timeline
-npx myc replay <domain>        # re-run recent goals
-npx myc batch <file>           # multi-domain batch from JSON
 npx myc clear <domain>         # wipe domain store
 ```
+
+The `myc` binary is a developer/admin wrapper around the SDK. Application integrations should call the exported SDK functions directly.
 
 ## Local development
 
@@ -104,7 +102,7 @@ js/
 │   ├── types.ts          Hint, DomainStore, RunOutcome
 │   ├── reader.ts         readStore, applyDecay, filterHints
 │   └── writer.ts         mergeHints, updateRunStats, writeStore
-├── cli/                  `myc` subcommands (thin wrappers)
+├── tools/                optional `myc` inspection/debugging wrappers
 ├── demo/                 5-session demo arc
 └── examples/             basic-sdk.ts, advanced-sdk.ts, ...
 ```

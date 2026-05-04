@@ -14,7 +14,7 @@
     "mycelium.config.ts",
     "core/**/*.ts",
     "store/**/*.ts",
-    "cli/**/*.ts"
+    "tools/**/*.ts"
   ],
   "exclude": [
     "node_modules",

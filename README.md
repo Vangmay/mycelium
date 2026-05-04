@@ -36,12 +36,12 @@ npm run install:js                 # installs JS deps
 # Demo — no API credits needed
 npm run demo:mock
 
-# Real run via the CLI
-npm run cli -- run amazon.com "find the price of Kindle Paperwhite"
-npm run cli -- inspect amazon.com
+# Optional local tools
+npm run tools -- run amazon.com "find the price of Kindle Paperwhite"
+npm run tools -- inspect amazon.com
 ```
 
-For the JS SDK API, CLI commands, and publish instructions see [js/README.md](js/README.md).
+For the JS SDK API, local tools, and publish instructions see [js/README.md](js/README.md).
 For Python, see [python/README.md](python/README.md).
 
 ## Root-level scripts
@@ -53,7 +53,7 @@ All forward to `js/`:
 | `npm run install:js` | `npm install` inside `js/` |
 | `npm run demo` | `tsx demo/run-demo.ts` (real API calls) |
 | `npm run demo:mock` | `MYCELIUM_MOCK=1 tsx demo/run-demo.ts` |
-| `npm run cli -- <args>` | `tsx cli/index.ts <args>` |
+| `npm run tools -- <args>` | `tsx tools/index.ts <args>` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Build publishable `dist/` in `js/` |
 | `npm run server` | Start the web UI (`server/server.ts`) |

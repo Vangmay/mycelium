@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mycelium — basic CLI usage
+# Mycelium — basic local tools usage
 # Requires: .env file with TINYFISH_API_KEY and OPENAI_API_KEY
 
 # First run — no knowledge, starts fresh

@@ -1,5 +1,5 @@
 // Loads .env from the JS package root and repo root (parent).
-// Used by CLI and demo entry points so either .env location works.
+// Used by local tools and demo entry points so either .env location works.
 import { config as dotenvConfig } from "dotenv"
 import { fileURLToPath } from "url"
 import { dirname, resolve } from "path"
