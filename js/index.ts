@@ -5,6 +5,7 @@
 export { run } from "./core/runner.ts"
 export { prime, buildGoal } from "./core/prime.ts"
 export { record } from "./core/recorder.ts"
+export { classifyOutcome } from "./analyzer/classifier.ts"
 export {
   domainStats,
   listDomains,
@@ -17,3 +18,4 @@ export type { PrimeResult } from "./core/prime.ts"
 export type { RecordResult, RecordOptions } from "./core/recorder.ts"
 export type { Hint, RunOutcome, HintType } from "./store/types.ts"
 export type { DomainStats, HistoryEntry } from "./store/graph/queries.ts"
+export type { ClassificationResult, WebSymptom, WebSymptomName } from "./analyzer/classifier.ts"

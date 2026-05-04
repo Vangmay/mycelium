@@ -25,6 +25,9 @@ interface CandidateRow {
   hintType: HintType
   note: string
   action: string
+  source: Hint["source"]
+  tags: string[]
+  initialConfidence: number | null
   confirms: number       // count of distinct confirmed-by evidence runs
   last_seen: string | null  // most recent applies-to edge last_seen for this domain
 }
@@ -53,20 +56,43 @@ function fetchHintsForDomain(db: Database.Database, domain: string): CandidateRo
   `).all(domainId, domainId) as { hint_id: string; props: string; confirms: number; last_seen: string | null }[]
 
   return rows.map((r) => {
-    const props = JSON.parse(r.props) as { hintType: HintType; note: string; action: string }
+    const props = JSON.parse(r.props) as {
+      hintType: HintType
+      note: string
+      action: string
+      source?: Hint["source"]
+      tags?: string[]
+      initialConfidence?: number
+    }
     return {
       hint_id: r.hint_id,
       hintType: props.hintType,
       note: props.note,
       action: props.action,
+      source: props.source,
+      tags: Array.isArray(props.tags) ? props.tags : [],
+      initialConfidence: typeof props.initialConfidence === "number" ? props.initialConfidence : null,
       confirms: r.confirms,
       last_seen: r.last_seen,
     }
   })
 }
 
-function computeConfidence(confirms: number, lastSeen: string | null): number {
-  let conf = Math.min(MAX_CONFIDENCE, NEW_HINT_BASE_CONFIDENCE + PER_RUN_BUMP * confirms)
+function computeConfidence(
+  confirms: number,
+  lastSeen: string | null,
+  initialConfidence: number | null,
+  source: Hint["source"],
+): number {
+  const sourceFloor = source === "manual" ? 0.95 : source === "rule" ? 0.7 : 0
+  let conf = Math.min(
+    MAX_CONFIDENCE,
+    Math.max(
+      NEW_HINT_BASE_CONFIDENCE + PER_RUN_BUMP * confirms,
+      initialConfidence ?? 0,
+      sourceFloor,
+    ),
+  )
   if (lastSeen) {
     const ageDays = (Date.now() - new Date(lastSeen).getTime()) / (1000 * 60 * 60 * 24)
     if (ageDays > DECAY_HALVE_DAYS) conf *= 0.5
@@ -122,7 +148,7 @@ export async function primeFromGraph(args: PrimeFromGraphArgs): Promise<Hint[]> 
   const scored = candidates
     .map((c) => ({
       ...c,
-      confidence: computeConfidence(c.confirms, c.last_seen),
+      confidence: computeConfidence(c.confirms, c.last_seen, c.initialConfidence, c.source),
     }))
     .filter((c) => c.confidence >= config.minConfidence)
 
@@ -177,5 +203,7 @@ export async function primeFromGraph(args: PrimeFromGraphArgs): Promise<Hint[]> 
     confidence: hint.confidence,
     seen: hint.confirms,
     last: hint.last_seen ?? today,
+    source: hint.source,
+    tags: hint.tags,
   }))
 }

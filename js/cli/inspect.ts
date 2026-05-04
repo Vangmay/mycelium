@@ -44,7 +44,9 @@ export function cmdInspect(domain: string) {
     const confStr = conf >= 80 ? chalk.green(`${conf}%`) : conf >= 60 ? chalk.yellow(`${conf}%`) : chalk.red(`${conf}%`)
 
     console.log()
-    console.log(`  ${bar} ${confStr}  ${colour(`[${h.type}]`)}`)
+    const source = h.source ? chalk.dim(` ${h.source}`) : ""
+    const tags = h.tags?.length ? chalk.dim(` #${h.tags.join(" #")}`) : ""
+    console.log(`  ${bar} ${confStr}  ${colour(`[${h.type}]`)}${source}${tags}`)
     console.log(`  ${chalk.dim("note:")}   ${h.note}`)
     console.log(`  ${chalk.dim("action:")} ${h.action}`)
     console.log(`  ${chalk.dim(`seen ${h.seen}x · last ${h.last}`)}`)

@@ -74,6 +74,9 @@ export async function recordToGraph(args: RecordToGraphArgs): Promise<RecordToGr
       hintType: h.type,
       note: h.note,
       action: h.action,
+      source: h.source ?? "auto",
+      tags: h.tags ?? [],
+      initialConfidence: h.confidence,
     })
 
     if (!existed) {
@@ -103,6 +106,30 @@ export async function recordToGraph(args: RecordToGraphArgs): Promise<RecordToGr
     })
 
     newOrConfirmed.add(hintNodeId)
+
+    for (const tag of h.tags ?? []) {
+      const tagName = normalizeTag(tag)
+      if (!tagName) continue
+      const patternNodeId = upsertNode(db, "Pattern", tagName, {
+        tag: tagName,
+        source: h.source ?? "auto",
+      })
+      addEdge(db, {
+        source_id: patternNodeId,
+        target_id: hintNodeId,
+        type: "generalizes",
+        confidence: h.confidence,
+        evidence_run_id: runIdFull,
+      })
+      addEdge(db, {
+        source_id: patternNodeId,
+        target_id: domainId,
+        type: "applies-to",
+        confidence: h.confidence,
+        evidence_run_id: runIdFull,
+        properties: { lastSeen: new Date().toISOString().split("T")[0] },
+      })
+    }
   }
 
   // Hints injected during prime but NOT confirmed in this run — record the
@@ -121,6 +148,10 @@ export async function recordToGraph(args: RecordToGraphArgs): Promise<RecordToGr
   await writeEmbeddings(db, runIdFull, goalNodeId, outcome, hints)
 
   return { runId: runIdFull, hintsAdded, hintsConfirmed }
+}
+
+function normalizeTag(tag: string): string {
+  return tag.toLowerCase().replace(/[^a-z0-9_:-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60)
 }
 
 interface EmbedItem {

@@ -80,7 +80,8 @@ Loaded by [load-env.ts](load-env.ts) from `js/.env` and `../ .env` (repo root) �
 
 ```bash
 TINYFISH_API_KEY=   # required for real runs
-OPENAI_API_KEY=     # required for hint extraction in recorder.ts
+OPENAI_API_KEY=     # optional; enables LLM hint extraction when present
+MYCELIUM_LLM_EXTRACT=0  # optional; force-disable LLM extraction and use rule hints only
 MYCELIUM_MOCK=1     # skip both APIs entirely
 MYCELIUM_STORE_PATH=./.mycelium   # override default store location
 ```
@@ -95,8 +96,10 @@ js/
 ├── core/
 │   ├── runner.ts         run() — prime → TinyFish → record
 │   ├── prime.ts          prime(), buildGoal()
-│   ├── recorder.ts       record() — GPT-4o-mini extraction
+│   ├── recorder.ts       record() — rule hints + optional GPT-4o-mini extraction
 │   └── mock.ts           offline mock responses
+├── analyzer/
+│   └── classifier.ts     deterministic web-automation symptoms → hints
 ├── store/
 │   ├── types.ts          Hint, DomainStore, RunOutcome
 │   ├── reader.ts         readStore, applyDecay, filterHints

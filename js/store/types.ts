@@ -15,6 +15,8 @@ export interface Hint {
   confidence: number  // 0.0 – 1.0
   seen: number        // how many runs confirmed this
   last: string        // ISO date string, YYYY-MM-DD
+  source?: "auto" | "rule" | "manual"
+  tags?: string[]
 }
 
 export interface RunOutcome {

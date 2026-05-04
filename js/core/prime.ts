@@ -32,8 +32,14 @@ export async function prime(domain: string, goal?: string): Promise<PrimeResult>
 
 function formatHint(h: Hint): string {
   const conf = Math.round(h.confidence * 100)
-  const prefix = h.type === "flow" ? `- [SHORTCUT, ${conf}% confident]` : `- [${conf}% confident]`
-  return `${prefix} ${h.note} → ${h.action}`
+  const source = h.source === "rule" ? "RULE" : h.source === "manual" ? "MANUAL" : null
+  const labels = [
+    h.type === "flow" ? "SHORTCUT" : null,
+    source,
+    `${conf}% confident`,
+  ].filter(Boolean)
+  const tags = h.tags?.length ? ` (${h.tags.join(", ")})` : ""
+  return `- [${labels.join(", ")}] ${h.note}${tags} → ${h.action}`
 }
 
 const STOP_RULES = `RULES:

@@ -24,8 +24,16 @@ const NEW_HINT_BASE_CONFIDENCE = 0.6
 const PER_RUN_BUMP = 0.05
 const MAX_CONFIDENCE = 0.99
 
-function confFromConfirms(confirms: number): number {
-  return Math.min(MAX_CONFIDENCE, NEW_HINT_BASE_CONFIDENCE + PER_RUN_BUMP * confirms)
+function confFromConfirms(
+  confirms: number,
+  initialConfidence?: number,
+  source?: Hint["source"],
+): number {
+  const sourceFloor = source === "manual" ? 0.95 : source === "rule" ? 0.7 : 0
+  return Math.min(
+    MAX_CONFIDENCE,
+    Math.max(NEW_HINT_BASE_CONFIDENCE + PER_RUN_BUMP * confirms, initialConfidence ?? 0, sourceFloor),
+  )
 }
 
 export function domainStats(domain: string): DomainStats | null {
@@ -49,6 +57,7 @@ export function domainStats(domain: string): DomainStats | null {
   const hintRows = db.prepare(`
     SELECT
       h.id AS hint_id,
+      h.properties AS props,
       (SELECT COUNT(DISTINCT evidence_run_id) FROM edges
         WHERE source_id = h.id AND type = 'confirmed-by' AND evidence_run_id IS NOT NULL) AS confirms
     FROM nodes h
@@ -57,12 +66,15 @@ export function domainStats(domain: string): DomainStats | null {
         SELECT 1 FROM edges e
         WHERE e.source_id = h.id AND e.target_id = ? AND e.type = 'applies-to'
       )
-  `).all(dId) as { hint_id: string; confirms: number }[]
+  `).all(dId) as { hint_id: string; props: string; confirms: number }[]
 
   const hintsCount = hintRows.length
   const avgConfidence = hintsCount === 0
     ? 0
-    : hintRows.reduce((s, r) => s + confFromConfirms(r.confirms), 0) / hintsCount
+    : hintRows.reduce((s, r) => {
+        const p = JSON.parse(r.props) as { initialConfidence?: number; source?: Hint["source"] }
+        return s + confFromConfirms(r.confirms, p.initialConfidence, p.source)
+      }, 0) / hintsCount
 
   return {
     domain,
@@ -109,15 +121,24 @@ export function domainHints(domain: string): DomainHint[] {
 
   const today = new Date().toISOString().split("T")[0]
   return rows.map((r) => {
-    const props = JSON.parse(r.props) as { hintType: HintType; note: string; action: string }
+    const props = JSON.parse(r.props) as {
+      hintType: HintType
+      note: string
+      action: string
+      source?: Hint["source"]
+      tags?: string[]
+      initialConfidence?: number
+    }
     return {
       id: r.hint_id,
       type: props.hintType,
       note: props.note,
       action: props.action,
-      confidence: confFromConfirms(r.confirms),
+      confidence: confFromConfirms(r.confirms, props.initialConfidence, props.source),
       seen: r.confirms,
       last: r.last_seen ?? today,
+      source: props.source,
+      tags: Array.isArray(props.tags) ? props.tags : [],
     }
   })
 }
