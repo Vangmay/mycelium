@@ -25,6 +25,6 @@ export interface RunOutcome {
   success: boolean
   steps: string[]
   errors: string[]
-  raw: string         // full TinyFish response text
+  raw: string         // full provider response text/log
   durationMs?: number
 }

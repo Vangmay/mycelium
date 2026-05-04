@@ -1,6 +1,7 @@
 #!/bin/bash
 # Mycelium — basic local tools usage
-# Requires: .env file with TINYFISH_API_KEY and OPENAI_API_KEY
+# Requires TINYFISH_API_KEY when using the default TinyFish adapter.
+# OPENAI_API_KEY is optional; deterministic rule extraction works without it.
 
 # First run — no knowledge, starts fresh
 npx myc run amazon.com "find the price of Kindle Paperwhite"

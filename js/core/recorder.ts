@@ -4,7 +4,7 @@ import { classifyOutcome, renderSymptoms } from "../analyzer/classifier.ts"
 import { recordToGraph } from "../store/graph/writer.ts"
 
 const EXTRACT_SYSTEM = `You are an expert at extracting reusable web automation hints from agent run logs.
-Given a TinyFish web agent run result, extract a JSON array of hints that would help future runs succeed.
+Given a web agent run result, extract a JSON array of hints that would help future runs succeed.
 
 Each hint must follow this schema:
 {

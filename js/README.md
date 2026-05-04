@@ -8,41 +8,49 @@ JS SDK for Mycelium, with optional local `myc` tools for inspection and debuggin
 npm install mycelium
 ```
 
-## SDK — drop-in replacement for TinyFish
+## SDK — two-phase integration
 
 ```typescript
 import 'dotenv/config'
-import { run } from "mycelium"
+import { prime, buildGoal, record } from "mycelium"
+
+const url = "amazon.com"
+const domain = "amazon.com"
+const goal = "find the price of Kindle Paperwhite"
+
+const primed = await prime(domain, goal)
+const enrichedGoal = buildGoal(goal, primed)
+
+// Call whichever web agent provider your app already uses.
+const agentResult = await yourWebAgent.run({ url, goal: enrichedGoal })
+
+await record({
+  domain,
+  goal,
+  success: agentResult.success,
+  steps: agentResult.steps,
+  errors: agentResult.errors,
+  raw: agentResult.raw,
+  durationMs: agentResult.durationMs,
+}, {
+  hintsUsedIds: primed.hintsUsedIds,
+})
+```
+
+## SDK — adapter convenience
+
+```typescript
+import { run, tinyfishAdapter } from "mycelium"
 
 const result = await run({
   url: "amazon.com",
   goal: "find the price of Kindle Paperwhite",
+  adapter: tinyfishAdapter(),
 })
 
-console.log(result.data)                      // TinyFish response
-console.log(result.primed.hintsLoaded)        // hints injected this run
-console.log(result.recorded.hintsExtracted)   // new hints saved
-console.log(result.recorded.hintsTotal)       // total hints in store
-```
-
-## SDK — manual control
-
-```typescript
-import { prime, record, buildGoal } from "mycelium"
-
-const ctx = prime("amazon.com", "find Kindle price")
-const enrichedGoal = buildGoal("find Kindle price", ctx)
-
-// ...your own TinyFish call...
-
-await record({
-  domain: "amazon.com",
-  goal: "find Kindle price",
-  success: true,
-  steps: ["navigated", "clicked", "extracted"],
-  errors: [],
-  raw: rawResponseText,
-})
+console.log(result.data)
+console.log(result.primed.hintsLoaded)
+console.log(result.recorded.hintsExtracted)
 ```
 
 ## Local tools
@@ -77,7 +85,7 @@ npm run build
 Loaded by [load-env.ts](load-env.ts) from `js/.env` and `../ .env` (repo root) — so a single `.env` at the repo root works.
 
 ```bash
-TINYFISH_API_KEY=   # required for real runs
+TINYFISH_API_KEY=   # required only when using tinyfishAdapter()
 OPENAI_API_KEY=     # optional; enables LLM hint extraction when present
 MYCELIUM_LLM_EXTRACT=0  # optional; force-disable LLM extraction and use rule hints only
 MYCELIUM_MOCK=1     # skip both APIs entirely
@@ -91,17 +99,19 @@ js/
 ├── index.ts              SDK public exports
 ├── mycelium.config.ts    Defaults (store path, decay, thresholds)
 ├── load-env.ts           Multi-path dotenv loader
+├── adapters/
+│   ├── types.ts          provider adapter contract
+│   └── tinyfish.ts       TinyFish adapter
 ├── core/
-│   ├── runner.ts         run() — prime → TinyFish → record
+│   ├── runner.ts         run() — prime → adapter → record
 │   ├── prime.ts          prime(), buildGoal()
 │   ├── recorder.ts       record() — rule hints + optional GPT-4o-mini extraction
 │   └── mock.ts           offline mock responses
 ├── analyzer/
 │   └── classifier.ts     deterministic web-automation symptoms → hints
 ├── store/
-│   ├── types.ts          Hint, DomainStore, RunOutcome
-│   ├── reader.ts         readStore, applyDecay, filterHints
-│   └── writer.ts         mergeHints, updateRunStats, writeStore
+│   ├── types.ts          Hint, RunOutcome
+│   └── graph/            SQLite graph, traversal, embeddings, queries
 ├── tools/                optional `myc` inspection/debugging wrappers
 ├── demo/                 5-session demo arc
 └── examples/             basic-sdk.ts, advanced-sdk.ts, ...

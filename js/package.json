@@ -1,7 +1,7 @@
 {
   "name": "@vangmay/mycelium",
   "version": "0.1.0",
-  "description": "Self-improving memory layer for TinyFish web agents",
+  "description": "Self-improving memory layer for web agents",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

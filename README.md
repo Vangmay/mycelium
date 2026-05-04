@@ -1,15 +1,15 @@
 # Mycelium 🌱
 
-Self-improving memory layer for TinyFish web agents.
+Self-improving memory layer for web agents.
 
-TinyFish learns at the platform level. Mycelium gives every developer that same compounding advantage on their own specific workflows — stored in a file they own and can inspect.
+Mycelium gives developers compounding web-agent memory on their own specific workflows, backed by a local graph store they own and can inspect.
 
 ## How it works
 
-Every TinyFish API call starts cold. Mycelium fixes this with two functions:
+Most web-agent calls start cold. Mycelium fixes this with two phases:
 
-- **`prime(domain)`** — loads past learnings and injects them into the goal prompt before each run
-- **`record(domain, outcome)`** — parses what happened and writes structured hints back to `.mycelium/<domain>.json`
+- **`prime(domain, goal)`** — loads past learnings and injects them into the goal prompt before each run
+- **`record(outcome)`** — parses what happened and writes structured hints back to the local graph store
 
 Expertise compounds across sessions. The agent gets smarter every run, on your specific domains.
 
@@ -17,20 +17,20 @@ Expertise compounds across sessions. The agent gets smarter every run, on your s
 
 ```
 .
-├── js/          JavaScript / TypeScript SDK and `myc` CLI (published as `mycelium` on npm)
+├── js/          JavaScript / TypeScript SDK and optional `myc` tools
 ├── python/      Python SDK (published as `mycelium-sdk` on PyPI)
 ├── server/      Web UI that runs on top of the JS SDK
 └── package.json Root scripts that delegate to js/ for convenience
 ```
 
-The two SDKs share one on-disk format (`.mycelium/<domain>.json`) so Node and Python agents can read/write the same store.
+The JS SDK uses an embedded SQLite graph store. The older Python SDK still uses the previous JSON-store format.
 
 ## Quick start
 
 ```bash
 git clone https://github.com/you/mycelium
 cd mycelium
-cp .env.example .env               # fill in TINYFISH_API_KEY + OPENAI_API_KEY
+cp .env.example .env               # fill in provider keys as needed
 npm run install:js                 # installs JS deps
 
 # Demo — no API credits needed
@@ -63,14 +63,14 @@ All forward to `js/`:
 One `.env` at the repo root is loaded by both SDKs:
 
 ```bash
-TINYFISH_API_KEY=   # required for real runs
-OPENAI_API_KEY=     # required for hint extraction
+TINYFISH_API_KEY=   # required only when using the TinyFish adapter
+OPENAI_API_KEY=     # optional; enables LLM hint extraction
 MYCELIUM_MOCK=1     # skip both APIs and use deterministic mocks
 MYCELIUM_STORE_PATH=./js/.mycelium   # override the default store location
 ```
 
 ## Team sharing
 
-Commit `js/.mycelium/` (or whichever `MYCELIUM_STORE_PATH` you use). Git is the sync mechanism — no server needed. What one developer's agent learns on Monday, the whole team benefits from on Tuesday.
+Share the configured `MYCELIUM_STORE_PATH` if you want teams to reuse learned graph knowledge. What one developer's agent learns on Monday, the whole team can benefit from on Tuesday.
 
 ## Built for TinyFish SG Hackathon 2026

@@ -1,29 +1,29 @@
 # Mycelium
 
-Self-improving memory layer for TinyFish web agents. Wraps the TinyFish API with a persistent knowledge store — one JSON file per domain — that accumulates operational learnings across sessions. Agents start every session knowing what worked last time.
+Self-improving memory layer for web agents. Mycelium primes any provider with domain knowledge, records the outcome, and stores reusable hints in a local graph. TinyFish is now one adapter, not the core architecture.
 
 ## Repository layout
 
 ```
 .
-├── js/          JavaScript / TypeScript SDK and `myc` CLI (npm: "mycelium")
+├── js/          JavaScript / TypeScript SDK and optional local tools
 ├── python/      Python SDK (PyPI: "mycelium-sdk")
 ├── server/      Web UI that imports from ../js/
 ├── package.json Root scripts — all delegate to js/
 └── .env         Single shared env file, loaded by both SDKs
 ```
 
-The two SDKs share one on-disk format (`.mycelium/<domain>.json`) so Node and Python agents can interoperate on the same store.
+The JS SDK now uses an embedded SQLite graph store. The older Python SDK still uses the previous JSON-store format.
 
 ## What this project does
 
-Every TinyFish API call starts stateless. Mycelium fixes this with three steps per run:
+Every web-agent provider call starts stateless. Mycelium fixes this with three steps per run:
 
-1. **prime(domain)** — reads `.mycelium/<domain>.json`, applies confidence decay, injects surviving hints into the agent's goal prompt as natural language
-2. **callTinyFish(url, enrichedGoal)** — streams the TinyFish SSE response, collects steps and errors
-3. **record(domain, outcome)** — sends a summary to GPT-4o-mini, extracts structured hints, merges them back into the domain file
+1. **prime(domain, goal)** — reads the graph, applies confidence/decay, injects surviving hints into the agent's goal prompt as natural language
+2. **adapter.run({ url, goal })** — calls TinyFish, Stagehand, Playwright, or another provider and returns a normalized result
+3. **record(outcome)** — runs deterministic web rules plus optional LLM extraction, then writes structured hints back to the graph
 
-The store is plain JSON. No database, no server, no model training.
+The JS store is embedded SQLite plus sqlite-vec. No hosted server, no model training.
 
 ## Runtime
 
@@ -50,9 +50,9 @@ cp .env.example .env
 ```
 
 ```bash
-TINYFISH_API_KEY=   # required for real runs
-OPENAI_API_KEY=     # required for learning extraction in js/core/recorder.ts
-MYCELIUM_MOCK=1     # set to skip TinyFish + OpenAI calls entirely
+TINYFISH_API_KEY=   # required only for the TinyFish adapter
+OPENAI_API_KEY=     # optional; enables LLM extraction in js/core/recorder.ts
+MYCELIUM_MOCK=1     # set to skip external calls in demo/tool flows
 MYCELIUM_STORE_PATH=./js/.mycelium   # override default store location
 ```
 
@@ -80,14 +80,17 @@ js/
 ├── mycelium.config.ts    # storePath, decayDays, minConfidence, maxHints
 ├── load-env.ts           # multi-path dotenv loader (js/.env + ../.env)
 ├── core/
-│   ├── runner.ts         # run() — orchestrates prime → TinyFish → record
+│   ├── runner.ts         # run() — orchestrates prime → adapter → record
 │   ├── prime.ts          # prime(), buildGoal()
-│   ├── recorder.ts       # record() — GPT-4o-mini extraction
-│   └── mock.ts           # getMockResponse() for offline testing
+│   └── recorder.ts       # record() — rule hints + optional LLM extraction
+├── adapters/
+│   ├── types.ts          # provider adapter contract
+│   └── tinyfish.ts       # TinyFish adapter
+├── analyzer/
+│   └── classifier.ts     # deterministic web automation symptoms → hints
 ├── store/
-│   ├── types.ts          # Hint, DomainStore, RunOutcome, ...
-│   ├── reader.ts         # readStore, applyDecay, filterHints
-│   └── writer.ts         # mergeHints, updateRunStats, writeStore
+│   ├── types.ts          # Hint, RunOutcome
+│   └── graph/            # SQLite graph, traversal, embeddings, queries
 ├── tools/                # optional local inspection/debugging wrappers
 ├── demo/                 # 5-session hackathon demo arc
 ├── examples/             # basic-sdk.ts, advanced-sdk.ts, basic-cli.sh, batch-tasks.json
@@ -111,7 +114,7 @@ python/
     └── config.py          # Config + MYCELIUM_STORE_PATH env override
 ```
 
-Public surface mirrors the JS SDK, but attribute names are snake_case (`hints_loaded`, `hints_extracted`, `hints_total`, `duration_ms`). JSON written to disk uses the JS camelCase keys, so the two SDKs are wire-compatible.
+Public surface mirrors the older JS SDK shape, but attribute names are snake_case (`hints_loaded`, `hints_extracted`, `hints_total`, `duration_ms`).
 
 ## Key types
 
@@ -160,17 +163,11 @@ Trust is slow to earn, quick to lose. Stale selectors should stop being injected
 
 ## Mock mode
 
-`MYCELIUM_MOCK=1` replaces the TinyFish HTTP call with `getMockResponse()` in `js/core/mock.ts` (or `python/src/mycelium/mock.py`). The mock:
-- Reads the real `.mycelium/` store to decide which friction points are covered
-- Simulates degraded responses when hints are missing, clean runs when they exist
-- Writes real hints to the store so the learning arc compounds genuinely
-- Is used by `js/demo/run-demo.ts` for offline rehearsal
+`MYCELIUM_MOCK=1` is kept for demo/tool flows that need to avoid external provider calls. The modern JS runtime is adapter-based, so provider-specific mocking belongs at the adapter boundary.
 
-The demo arc is genuine even in mock mode — the store accumulates real JSON.
+## TinyFish adapter SSE parsing
 
-## SSE parsing
-
-TinyFish streams responses as server-sent events. `callTinyFish()` in `js/core/runner.ts` parses them:
+TinyFish streams responses as server-sent events. `tinyfishAdapter()` in `js/adapters/tinyfish.ts` parses them:
 
 ```typescript
 event.type === "PROGRESS"  // agent navigation step — event.purpose
@@ -216,9 +213,9 @@ print(result.primed.hints_loaded, result.recorded.hints_total)
 
 **"no knowledge found" on every run** — store is writing to the wrong path. The default is `./.mycelium` relative to cwd. Either set `MYCELIUM_STORE_PATH=./js/.mycelium` or run from inside `js/`.
 
-**GPT extraction returns empty array** — the raw TinyFish response is too short or malformed. Set `MYCELIUM_DEBUG=1` to see the GPT response.
+**LLM extraction returns empty array** — the provider raw response may be too short or malformed. Set `MYCELIUM_DEBUG=1` to see the LLM response.
 
-**SSE stream hangs / auth error** — `TINYFISH_API_KEY` not set or `.env` not copied. The loader checks both `js/.env` and repo-root `.env`.
+**TinyFish SSE stream hangs / auth error** — `TINYFISH_API_KEY` not set or `.env` not copied. The loader checks both `js/.env` and repo-root `.env`.
 
 **"Cannot find module" errors** — deps not installed. From the root, `npm run install:js`.
 

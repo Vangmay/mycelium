@@ -13,7 +13,7 @@ const program = new Command()
 
 program
   .name("myc")
-  .description("Mycelium — self-improving memory layer for TinyFish web agents")
+  .description("Mycelium — self-improving memory layer for web agents")
   .version("0.1.0")
 
 program
