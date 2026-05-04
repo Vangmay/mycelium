@@ -1,11 +1,11 @@
 import chalk from "chalk"
-import { readStore, applyDecay } from "../store/reader.ts"
+import { domainStats, domainHints } from "../store/graph/queries.ts"
 
 export function cmdInspect(domain: string) {
-  const raw = readStore(domain)
-  const store = applyDecay(raw)
+  const stats = domainStats(domain)
+  const hints = stats ? domainHints(domain) : []
 
-  if (store.hints.length === 0) {
+  if (!stats || hints.length === 0) {
     console.log()
     console.log(chalk.dim(`  no knowledge found for ${domain}`))
     console.log(chalk.dim(`  run: myc run ${domain} "<goal>" to start learning`))
@@ -13,17 +13,16 @@ export function cmdInspect(domain: string) {
     return
   }
 
-  const avgConf = store.hints.reduce((s, h) => s + h.confidence, 0) / store.hints.length
-  const successPct = Math.round(store.successRate * 100)
+  const successPct = Math.round(stats.successRate * 100)
 
   console.log()
   console.log(chalk.bold(`  ${domain}`))
   console.log(chalk.dim("  " + "─".repeat(54)))
-  console.log(`  ${chalk.dim("runs:")}          ${store.runs}`)
+  console.log(`  ${chalk.dim("runs:")}          ${stats.runs}`)
   console.log(`  ${chalk.dim("success rate:")}  ${successPct >= 80 ? chalk.green(`${successPct}%`) : successPct >= 50 ? chalk.yellow(`${successPct}%`) : chalk.red(`${successPct}%`)}`)
-  console.log(`  ${chalk.dim("hints:")}         ${store.hints.length}`)
-  console.log(`  ${chalk.dim("avg confidence:")} ${Math.round(avgConf * 100)}%`)
-  console.log(`  ${chalk.dim("updated:")}       ${store.updated.split("T")[0]}`)
+  console.log(`  ${chalk.dim("hints:")}         ${hints.length}`)
+  console.log(`  ${chalk.dim("avg confidence:")} ${Math.round(stats.avgConfidence * 100)}%`)
+  console.log(`  ${chalk.dim("updated:")}       ${stats.updated.split("T")[0]}`)
   console.log(chalk.dim("  " + "─".repeat(54)))
 
   const TYPE_COLOURS: Record<string, (s: string) => string> = {
@@ -36,7 +35,7 @@ export function cmdInspect(domain: string) {
     rate_limit: chalk.yellow,
   }
 
-  const sorted = [...store.hints].sort((a, b) => b.confidence - a.confidence)
+  const sorted = [...hints].sort((a, b) => b.confidence - a.confidence)
   for (const h of sorted) {
     const conf = Math.round(h.confidence * 100)
     const filled = Math.round(conf / 10)

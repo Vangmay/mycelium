@@ -1,14 +1,10 @@
-import { existsSync, unlinkSync } from "fs"
-import { storePath } from "../store/reader.ts"
+import { clearDomain } from "../store/graph/queries.ts"
 
 export function cmdClear(domain: string) {
-  const path = storePath(domain)
-
-  if (!existsSync(path)) {
+  const cleared = clearDomain(domain)
+  if (!cleared) {
     console.log(`\n  no knowledge found for ${domain} — nothing to clear\n`)
     return
   }
-
-  unlinkSync(path)
-  console.log(`\n  cleared knowledge store for ${domain}\n`)
+  console.log(`\n  cleared knowledge for ${domain}\n`)
 }

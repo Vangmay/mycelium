@@ -1,11 +1,10 @@
 import chalk from "chalk"
-import { readStore } from "../store/reader.ts"
+import { domainHistory } from "../store/graph/queries.ts"
 
 export function cmdHistory(domain: string, limit: number = 20) {
-  const store = readStore(domain)
-  const history = store.history ?? []
+  const entries = domainHistory(domain, limit)
 
-  if (history.length === 0) {
+  if (entries.length === 0) {
     console.log()
     console.log(chalk.dim(`  no run history for ${domain} yet`))
     console.log(chalk.dim(`  run: myc run ${domain} "<goal>" to start`))
@@ -13,7 +12,6 @@ export function cmdHistory(domain: string, limit: number = 20) {
     return
   }
 
-  const entries = history.slice(-limit).reverse()
   const successCount = entries.filter(e => e.success).length
   const successPct = Math.round(successCount / entries.length * 100)
 

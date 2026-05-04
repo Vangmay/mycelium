@@ -17,24 +17,6 @@ export interface Hint {
   last: string        // ISO date string, YYYY-MM-DD
 }
 
-export interface RunHistoryEntry {
-  ts: string          // ISO datetime
-  goal: string
-  success: boolean
-  hintsUsed: number
-  hintsAdded: number
-  durationMs?: number
-}
-
-export interface DomainStore {
-  domain: string
-  updated: string     // ISO datetime
-  runs: number
-  successRate: number
-  hints: Hint[]
-  history: RunHistoryEntry[]
-}
-
 export interface RunOutcome {
   domain: string
   goal: string

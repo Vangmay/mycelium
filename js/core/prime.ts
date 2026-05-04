@@ -1,29 +1,33 @@
-import { readStore, applyDecay, filterHints } from "../store/reader.ts"
+import { primeFromGraph } from "../store/graph/traversal.ts"
 import type { Hint } from "../store/types.ts"
 
 export interface PrimeResult {
   domain: string
   hintsLoaded: number
+  hintsUsedIds: string[]
   promptBlock: string
 }
 
-export function prime(domain: string, goal?: string): PrimeResult {
-  const raw = readStore(domain)
-  const decayed = applyDecay(raw)
-  const hints = filterHints(decayed, goal)
+export async function prime(domain: string, goal?: string): Promise<PrimeResult> {
+  const hints = await primeFromGraph({ domain, goal })
 
   if (hints.length === 0) {
-    return { domain, hintsLoaded: 0, promptBlock: "" }
+    return { domain, hintsLoaded: 0, hintsUsedIds: [], promptBlock: "" }
   }
 
-  const lines = hints.map((h) => formatHint(h))
+  const lines = hints.map(formatHint)
   const promptBlock = [
     `IMPORTANT — KNOWN HINTS FOR ${domain} (follow these, do not rediscover):`,
     ...lines,
     "",
   ].join("\n")
 
-  return { domain, hintsLoaded: hints.length, promptBlock }
+  return {
+    domain,
+    hintsLoaded: hints.length,
+    hintsUsedIds: hints.map((h) => h.id),
+    promptBlock,
+  }
 }
 
 function formatHint(h: Hint): string {

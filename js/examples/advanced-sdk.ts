@@ -5,7 +5,7 @@ import 'dotenv/config'
 import { prime, record, buildGoal } from "../index.ts"
 
 async function myPipeline(domain: string, goal: string) {
-  const primed = prime(domain)
+  const primed = await prime(domain)
   console.log(`loaded ${primed.hintsLoaded} hints for ${domain}`)
 
   const enrichedGoal = buildGoal(goal, primed)

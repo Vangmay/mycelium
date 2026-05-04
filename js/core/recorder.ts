@@ -1,7 +1,6 @@
 import OpenAI from "openai"
 import type { Hint, RunOutcome } from "../store/types.ts"
-import { readStore, applyDecay } from "../store/reader.ts"
-import { mergeHints, updateRunStats, writeStore } from "../store/writer.ts"
+import { recordToGraph } from "../store/graph/writer.ts"
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -42,10 +41,13 @@ export interface RecordResult {
   hintsTotal: number
 }
 
-export async function record(outcome: RunOutcome): Promise<RecordResult> {
+export interface RecordOptions {
+  hintsUsedIds?: string[]
+}
+
+export async function record(outcome: RunOutcome, opts: RecordOptions = {}): Promise<RecordResult> {
   const { domain, success, steps, errors, raw, goal } = outcome
 
-  // Build a compact summary for the LLM
   const durationSec = outcome.durationMs ? Math.round(outcome.durationMs / 1000) : null
   const summary = [
     `Domain: ${domain}`,
@@ -78,22 +80,14 @@ export async function record(outcome: RunOutcome): Promise<RecordResult> {
     newHints = []
   }
 
-  // Read, decay, merge, update stats, write
-  const store = applyDecay(readStore(domain))
-
-  // Merge, update stats, write
-  const withHints = mergeHints(store, newHints)
-  const withStats = updateRunStats(withHints, success, {
-    goal,
-    success,
-    hintsUsed: store.hints.filter(h => h.confidence >= 0.6).length,
-    hintsAdded: newHints.length,
-    durationMs: outcome.durationMs,
+  const result = await recordToGraph({
+    outcome,
+    hints: newHints,
+    hintsUsedIds: opts.hintsUsedIds,
   })
-  writeStore(withStats)
 
   return {
-    hintsExtracted: newHints.length,
-    hintsTotal: withStats.hints.length,
+    hintsExtracted: result.hintsAdded,
+    hintsTotal: result.hintsAdded + result.hintsConfirmed,
   }
 }

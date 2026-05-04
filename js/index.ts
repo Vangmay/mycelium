@@ -1,11 +1,19 @@
 // Mycelium SDK — public API
-// Drop-in wrapper around TinyFish with persistent domain memory
+// Drop-in wrapper around TinyFish with persistent domain memory backed by
+// an embedded SQLite + sqlite-vec graph store.
 
 export { run } from "./core/runner.ts"
 export { prime, buildGoal } from "./core/prime.ts"
 export { record } from "./core/recorder.ts"
-export { readStore, filterHints } from "./store/reader.ts"
+export {
+  domainStats,
+  listDomains,
+  domainHints,
+  domainHistory,
+  clearDomain,
+} from "./store/graph/queries.ts"
 export type { RunOptions, RunResult } from "./core/runner.ts"
 export type { PrimeResult } from "./core/prime.ts"
-export type { RecordResult } from "./core/recorder.ts"
-export type { Hint, DomainStore, RunOutcome, HintType } from "./store/types.ts"
+export type { RecordResult, RecordOptions } from "./core/recorder.ts"
+export type { Hint, RunOutcome, HintType } from "./store/types.ts"
+export type { DomainStats, HistoryEntry } from "./store/graph/queries.ts"

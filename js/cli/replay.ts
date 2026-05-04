@@ -1,10 +1,9 @@
 import chalk from "chalk"
-import { readStore } from "../store/reader.ts"
+import { domainHistory, domainHints } from "../store/graph/queries.ts"
 import { run } from "../core/runner.ts"
 
 export async function cmdReplay(domain: string, n: number = 5) {
-  const store = readStore(domain)
-  const history = store.history ?? []
+  const history = domainHistory(domain)
 
   if (history.length === 0) {
     console.log()
@@ -15,14 +14,16 @@ export async function cmdReplay(domain: string, n: number = 5) {
 
   // Collect unique recent goals
   const recentGoals = [...new Map(
-    [...history].reverse().map(e => [e.goal, e])
+    history.map(e => [e.goal, e])
   ).values()]
     .slice(0, n)
     .map(e => e.goal)
 
+  const hintsCount = domainHints(domain).length
+
   console.log()
   console.log(chalk.bold(`  replaying ${recentGoals.length} goal${recentGoals.length > 1 ? "s" : ""} on ${domain}`))
-  console.log(chalk.dim(`  knowledge store: ${store.hints.length} hints loaded`))
+  console.log(chalk.dim(`  knowledge store: ${hintsCount} hints loaded`))
   console.log(chalk.dim("  " + "─".repeat(54)))
   console.log()
 
