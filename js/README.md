@@ -45,7 +45,9 @@ import { run, tinyfishAdapter } from "mycelium"
 const result = await run({
   url: "amazon.com",
   goal: "find the price of Kindle Paperwhite",
-  adapter: tinyfishAdapter(),
+  adapter: tinyfishAdapter({
+    browserProfile: "stealth", // optional: "lite" is TinyFish's default
+  }),
 })
 
 console.log(result.data)
@@ -59,6 +61,7 @@ console.log(result.recorded.hintsExtracted)
 npx myc inspect <domain>       # coloured knowledge store view
 npx myc stats [--all]          # success rate trend
 npx myc clear <domain>         # wipe domain store
+npx myc run x.com "summarize a public post" --stealth
 ```
 
 The `myc` binary is a developer/admin wrapper around the SDK. Application integrations should call the exported SDK functions directly.
@@ -86,8 +89,8 @@ Loaded by [load-env.ts](load-env.ts) from `js/.env` and `../ .env` (repo root) â
 
 ```bash
 TINYFISH_API_KEY=   # required only when using tinyfishAdapter()
-OPENAI_API_KEY=     # optional; enables LLM hint extraction when present
-MYCELIUM_LLM_EXTRACT=0  # optional; force-disable LLM extraction and use rule hints only
+OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
+MYCELIUM_LLM_EXTRACT=1  # optional; opt in to LLM hint extraction
 MYCELIUM_MOCK=1     # skip both APIs entirely
 MYCELIUM_STORE_PATH=./.mycelium   # override default store location
 ```

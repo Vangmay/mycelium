@@ -10,23 +10,39 @@ export interface RunOptions {
   url: string
   goal: string
   adapter?: WebAgentAdapter
+  prime?: boolean
+  showPrompt?: boolean
   silent?: boolean  // suppress console output when used as SDK
 }
 
 export interface RunResult {
   success: boolean
-  data: any
+  data: unknown
   primed: PrimeResult
   recorded: RecordResult
   raw: string
+  prompt: string
+  steps: string[]
+  errors: string[]
+  durationMs: number
+  provider: string
 }
 
 export async function run(options: RunOptions): Promise<RunResult> {
-  const { url, goal, adapter = tinyfishAdapter(), silent = false } = options
+  const {
+    url,
+    goal,
+    adapter = tinyfishAdapter(),
+    prime: shouldPrime = true,
+    showPrompt = false,
+    silent = false,
+  } = options
   const domain = extractDomain(url)
 
   // Step 1: prime
-  const primed = await prime(domain, goal)
+  const primed = shouldPrime
+    ? await prime(domain, goal)
+    : { domain, hintsLoaded: 0, hintsUsedIds: [], promptBlock: "" }
   if (!silent && primed.hintsLoaded > 0) {
     console.log(`  + ${primed.hintsLoaded} hint${primed.hintsLoaded > 1 ? "s" : ""} loaded for ${domain}`)
   } else if (!silent) {
@@ -35,6 +51,13 @@ export async function run(options: RunOptions): Promise<RunResult> {
 
   // Step 2: call the configured web agent provider.
   const enrichedGoal = buildGoal(goal, primed)
+  if (showPrompt && !silent) {
+    console.log("  final prompt:")
+    for (const line of enrichedGoal.split("\n")) {
+      console.log(`    ${line}`)
+    }
+    console.log()
+  }
   const t0 = Date.now()
   const { success, data, raw, steps, errors } = await adapter.run({
     url,
@@ -54,7 +77,18 @@ export async function run(options: RunOptions): Promise<RunResult> {
     }
   }
 
-  return { success, data, primed, recorded, raw }
+  return {
+    success,
+    data,
+    primed,
+    recorded,
+    raw,
+    prompt: enrichedGoal,
+    steps,
+    errors,
+    durationMs,
+    provider: adapter.name,
+  }
 }
 
 function extractDomain(url: string): string {

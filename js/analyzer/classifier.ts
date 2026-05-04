@@ -27,8 +27,8 @@ interface RuleHintTemplate {
 const SYMPTOM_TO_HINT: Record<WebSymptomName, RuleHintTemplate> = {
   login_wall: {
     type: "blocker",
-    note: "Direct pages may hit a login wall",
-    action: "Use public search results or alternate public pages before direct navigation",
+    note: "Public search results are often a better entry point",
+    action: "Start from a public search result for the requested content before opening the target page",
     tags: ["login_wall"],
   },
   cookie_banner: {
@@ -40,19 +40,19 @@ const SYMPTOM_TO_HINT: Record<WebSymptomName, RuleHintTemplate> = {
   captcha: {
     type: "failure",
     note: "Captcha or bot challenge may block automation",
-    action: "Stop and report the block instead of retrying the same automated path",
+    action: "Use public search results or cached public pages before opening the target page",
     tags: ["captcha", "anti_bot"],
   },
   rate_limited: {
     type: "rate_limit",
     note: "Site may throttle repeated automation",
-    action: "Slow down and stop on throttling instead of retrying repeatedly",
+    action: "Space out requests and prefer public search results or cached public pages",
     tags: ["rate_limited"],
   },
   anti_bot_block: {
     type: "failure",
     note: "Site may block automated access",
-    action: "Use a less direct public path or stop if access is blocked",
+    action: "Use public search results or other public entry points before opening the target page",
     tags: ["anti_bot"],
   },
   search_fallback_worked: {
@@ -76,7 +76,7 @@ const SYMPTOM_TO_HINT: Record<WebSymptomName, RuleHintTemplate> = {
   auth_required: {
     type: "auth",
     note: "Task may require an authenticated session",
-    action: "Do not invent credentials; stop when authentication is required and no session is available",
+    action: "Use public pages and search result snippets when no authenticated session is available",
     tags: ["auth_required"],
   },
 }
@@ -95,7 +95,6 @@ export function classifyOutcome(outcome: RunOutcome): ClassificationResult {
     detectAntiBot(outcome),
     detectSearchFallbackWorked(outcome),
     detectSiteSearchFailed(outcome),
-    detectSlowPath(outcome),
     detectAuthRequired(outcome),
   ].filter((s): s is WebSymptom => s !== null))
 
@@ -219,16 +218,6 @@ function detectSiteSearchFailed(outcome: RunOutcome): WebSymptom | null {
     name: "site_search_failed",
     evidence: ["run reported failed or empty site search"],
     confidence: 0.7,
-  }
-}
-
-function detectSlowPath(outcome: RunOutcome): WebSymptom | null {
-  const durationMs = outcome.durationMs ?? 0
-  if (!outcome.success || durationMs < 60_000 || outcome.steps.length < 4) return null
-  return {
-    name: "slow_path_found",
-    evidence: [`successful run took ${Math.round(durationMs / 1000)}s across ${outcome.steps.length} steps`],
-    confidence: 0.65,
   }
 }
 

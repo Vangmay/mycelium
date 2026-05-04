@@ -2,15 +2,13 @@ import type Database from "better-sqlite3"
 import type { Hint, HintType } from "../types.ts"
 import config from "../../mycelium.config.ts"
 import { openDb } from "./db.ts"
-import { embed, vecBuffer } from "./embeddings.ts"
+import { embed } from "./embeddings.ts"
 import { nodeId } from "./nodes.ts"
 
 const NEW_HINT_BASE_CONFIDENCE = 0.6
 const PER_RUN_BUMP = 0.05
 const MAX_CONFIDENCE = 0.99
 const DECAY_HALVE_DAYS = config.decayDays
-const VECTOR_RERANK_K = 20  // top-K from ANN before SQL filtering
-
 // Hint shaping — type priority, per-type caps, drop-slow-timing rule.
 const TYPE_PRIORITY: Record<string, number> = {
   flow: 0, blocker: 1, auth: 2, timing: 3, selector: 4, failure: 5, rate_limit: 6,
@@ -19,6 +17,8 @@ const MAX_PER_TYPE: Record<string, number> = {
   flow: 2, timing: 1, failure: 2, blocker: 1, auth: 1, selector: 1, rate_limit: 1,
 }
 const DELAY_WORDS = /\b(waits?|delays?|longer|pause|sleep)\b/i
+const GENERIC_SLOW_PATH_WORDS = /\bfinal successful navigation path\b/i
+const GENERIC_ANTI_BOT_WORDS = /\b(blocked|automated access|bot)\b/i
 
 interface CandidateRow {
   hint_id: string
@@ -100,8 +100,10 @@ function computeConfidence(
   return conf
 }
 
-// Vector ANN: returns hint_ids ranked by goal similarity to either the
-// hint:note or hint:action embedding. Used as a soft re-rank, not a filter.
+// Vector rerank: returns hint_ids ranked by goal similarity to either the
+// hint:note or hint:action embedding. We compute this in-process over the
+// already-filtered candidate IDs. Domain hint sets are small, and this avoids
+// sqlite-vec KNN limitations around GROUP BY / MIN(distance).
 async function vectorRerankHints(
   db: Database.Database,
   goal: string,
@@ -109,26 +111,41 @@ async function vectorRerankHints(
 ): Promise<Map<string, number>> {
   if (!goal.trim() || hintIds.length === 0) return new Map()
 
-  const queryVec = vecBuffer(await embed(goal))
+  const queryVec = await embed(goal)
   const placeholders = hintIds.map(() => "?").join(",")
 
-  // Search both note and action embeddings, take MIN distance per hint.
-  // Cosine distance ranges [0, 2]; we convert to a score in [0, 1].
   const rows = db.prepare(`
-    SELECT entity_id, MIN(distance) AS dist
+    SELECT entity_id, embedding
     FROM embeddings
-    WHERE embedding MATCH ?
-      AND entity_type IN ('hint:note', 'hint:action')
+    WHERE entity_type IN ('hint:note', 'hint:action')
       AND entity_id IN (${placeholders})
-      AND k = ?
-    GROUP BY entity_id
-  `).all(queryVec, ...hintIds, VECTOR_RERANK_K) as { entity_id: string; dist: number }[]
+  `).all(...hintIds) as { entity_id: string; embedding: Buffer }[]
 
   const out = new Map<string, number>()
   for (const r of rows) {
-    out.set(r.entity_id, 1 - r.dist / 2)
+    const score = cosineScore(queryVec, float32FromBuffer(r.embedding))
+    out.set(r.entity_id, Math.max(out.get(r.entity_id) ?? 0, score))
   }
   return out
+}
+
+function float32FromBuffer(buf: Buffer): Float32Array {
+  return new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / Float32Array.BYTES_PER_ELEMENT)
+}
+
+function cosineScore(a: Float32Array, b: Float32Array): number {
+  if (a.length !== b.length || a.length === 0) return 0
+  let dot = 0
+  let na = 0
+  let nb = 0
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i]
+    na += a[i] * a[i]
+    nb += b[i] * b[i]
+  }
+  if (na === 0 || nb === 0) return 0
+  const cosine = dot / (Math.sqrt(na) * Math.sqrt(nb))
+  return Math.max(0, Math.min(1, (cosine + 1) / 2))
 }
 
 export interface PrimeFromGraphArgs {
@@ -166,7 +183,13 @@ export async function primeFromGraph(args: PrimeFromGraphArgs): Promise<Hint[]> 
 
   // Drop slow timing hints (existing JSON-store rule).
   const filtered = scored.filter(
-    (c) => c.hintType !== "timing" || !DELAY_WORDS.test(c.action),
+    (c) => {
+      if (c.hintType === "failure") return false
+      if (c.hintType === "timing" && DELAY_WORDS.test(c.action)) return false
+      if (c.tags.includes("slow_path_found") && GENERIC_SLOW_PATH_WORDS.test(c.action)) return false
+      if (c.tags.includes("anti_bot") && GENERIC_ANTI_BOT_WORDS.test(`${c.note} ${c.action}`)) return false
+      return true
+    },
   )
 
   // Per-type cap.

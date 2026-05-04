@@ -19,6 +19,10 @@ program
 program
   .command("run <url> <goal>")
   .description("Run an agent task with priming and auto-recording")
+  .option("--stealth", "use TinyFish stealth browser profile")
+  .option("--proxy-country <code>", "enable TinyFish proxy with a country code, e.g. US")
+  .option("--no-prime", "disable Mycelium hint injection for this run")
+  .option("--show-prompt", "print the final prompt sent to the adapter")
   .action(cmdRun)
 
 program

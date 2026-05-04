@@ -3,6 +3,11 @@ import type { WebAgentAdapter, WebAgentRunInput, WebAgentRunResult } from "./typ
 export interface TinyFishAdapterOptions {
   apiKey?: string
   endpoint?: string
+  browserProfile?: "lite" | "stealth"
+  proxyConfig?: {
+    enabled: boolean
+    country_code?: string
+  }
 }
 
 const DEFAULT_ENDPOINT = "https://agent.tinyfish.ai/v1/automation/run-sse"
@@ -16,6 +21,13 @@ export function tinyfishAdapter(options: TinyFishAdapterOptions = {}): WebAgentA
       const apiKey = options.apiKey ?? process.env.TINYFISH_API_KEY
       if (!apiKey) throw new Error("TINYFISH_API_KEY is not set")
 
+      const body: Record<string, unknown> = {
+        url: input.url.startsWith("http") ? input.url : `https://${input.url}`,
+        goal: input.goal,
+      }
+      if (options.browserProfile) body.browser_profile = options.browserProfile
+      if (options.proxyConfig) body.proxy_config = options.proxyConfig
+
       const response = await fetch(endpoint, {
         method: "POST",
         signal: input.signal,
@@ -23,10 +35,7 @@ export function tinyfishAdapter(options: TinyFishAdapterOptions = {}): WebAgentA
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
         },
-        body: JSON.stringify({
-          url: input.url.startsWith("http") ? input.url : `https://${input.url}`,
-          goal: input.goal,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
@@ -63,8 +72,17 @@ export function tinyfishAdapter(options: TinyFishAdapterOptions = {}): WebAgentA
               errors.push(event.message)
             }
             if (event.type === "COMPLETE") {
-              data = event.result ?? event.data
               success = event.status === "COMPLETED"
+              data = event.result ?? event.data ?? (success ? null : event)
+              if (!success) {
+                const message = [
+                  event.error,
+                  event.message,
+                  event.help_message,
+                  event.help_url,
+                ].filter(Boolean).join(" - ")
+                if (message) errors.push(message)
+              }
             }
           } catch {
             // Non-JSON SSE line; ignore.
@@ -76,4 +94,3 @@ export function tinyfishAdapter(options: TinyFishAdapterOptions = {}): WebAgentA
     },
   }
 }
-

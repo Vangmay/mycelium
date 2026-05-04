@@ -109,8 +109,9 @@ function shouldRunLlmExtraction(override?: boolean): boolean {
   if (["0", "false", "off", "no"].includes(raw)) return false
   if (["1", "true", "on", "yes"].includes(raw)) return Boolean(process.env.OPENAI_API_KEY)
 
-  // Optional by default: rules still produce hints when no OpenAI key is set.
-  return Boolean(process.env.OPENAI_API_KEY)
+  // Optional by default: rule extraction is the baseline. Opt in with
+  // MYCELIUM_LLM_EXTRACT=1 or record(..., { llmExtract: true }).
+  return false
 }
 
 function normalizeHints(items: unknown[], source: Hint["source"]): Hint[] {
