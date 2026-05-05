@@ -13,6 +13,7 @@
     "index.ts",
     "mycelium.config.ts",
     "adapters/**/*.ts",
+    "bench/**/*.ts",
     "core/**/*.ts",
     "store/**/*.ts",
     "tools/**/*.ts"

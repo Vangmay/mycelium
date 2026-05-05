@@ -1,0 +1,27 @@
+[
+  {
+    "id": "example-title",
+    "url": "example.com",
+    "goal": "summarize the page title"
+  },
+  {
+    "id": "x-nasa-profile",
+    "url": "x.com",
+    "goal": "find public information about @NASA on X using public search results and summarize it"
+  },
+  {
+    "id": "x-openai-post",
+    "url": "x.com",
+    "goal": "use public search results to find a recent public post from @OpenAI on X, then summarize the post text"
+  },
+  {
+    "id": "reddit-typescript",
+    "url": "reddit.com",
+    "goal": "open a public Reddit post about TypeScript and summarize the visible discussion"
+  },
+  {
+    "id": "reddit-typescript",
+    "url": "reddit.com",
+    "goal": "open a public Reddit post about TypeScript and summarize the visible discussion"
+  }
+]

@@ -20,7 +20,7 @@ export async function prime(
 
   const lines = hints.map(formatHint);
   const promptBlock = [
-    `IMPORTANT — KNOWN HINTS FOR ${domain} (follow these, do not rediscover):`,
+    `PAST OBSERVATIONS FOR ${domain}:`,
     ...lines,
     "",
   ].join("\n");
@@ -34,16 +34,8 @@ export async function prime(
 }
 
 function formatHint(h: Hint): string {
-  const conf = Math.round(h.confidence * 100);
-  const source =
-    h.source === "rule" ? "RULE" : h.source === "manual" ? "MANUAL" : null;
-  const labels = [
-    h.type === "flow" ? "SHORTCUT" : null,
-    source,
-    `${conf}% confident`,
-  ].filter(Boolean);
   const rendered = renderAgentSafeHint(h);
-  return `- [${labels.join(", ")}] ${rendered.note} → ${rendered.action}`;
+  return `- ${rendered.note}. ${rendered.action}.`;
 }
 
 function renderAgentSafeHint(h: Hint): { note: string; action: string } {
@@ -78,15 +70,12 @@ function renderAgentSafeHint(h: Hint): { note: string; action: string } {
   return { note: h.note, action: h.action };
 }
 
-const GUIDANCE_RULES = `RULES:
-- Follow the hints above — do not rediscover what is already known
-- If a hint redirects you to a different site or method, go there directly without attempting the original first
-- If direct access is not reliable, use public search results, cached pages, or other public entry points`;
+const GUIDANCE_RULES = `Use these observations only as optional context. Complete the task using the simplest public route that works.`;
 
 export function buildGoal(
   originalGoal: string,
   primeResult: PrimeResult,
 ): string {
   if (!primeResult.promptBlock) return originalGoal;
-  return `TASK: ${originalGoal}\n\n${primeResult.promptBlock}\n${GUIDANCE_RULES}`;
+  return `TASK:\n${originalGoal}\n\n${primeResult.promptBlock}${GUIDANCE_RULES}`;
 }

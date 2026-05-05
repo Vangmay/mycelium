@@ -11,6 +11,7 @@ export interface RunOptions {
   goal: string
   adapter?: WebAgentAdapter
   prime?: boolean
+  record?: boolean
   showPrompt?: boolean
   silent?: boolean  // suppress console output when used as SDK
 }
@@ -34,6 +35,7 @@ export async function run(options: RunOptions): Promise<RunResult> {
     goal,
     adapter = tinyfishAdapter(),
     prime: shouldPrime = true,
+    record: shouldRecord = true,
     showPrompt = false,
     silent = false,
   } = options
@@ -68,9 +70,13 @@ export async function run(options: RunOptions): Promise<RunResult> {
 
   // Step 3: record
   const outcome: RunOutcome = { domain, goal, success, steps, errors, raw, durationMs }
-  const recorded = await record(outcome, { hintsUsedIds: primed.hintsUsedIds })
+  const recorded = shouldRecord
+    ? await record(outcome, { hintsUsedIds: primed.hintsUsedIds })
+    : { hintsExtracted: 0, hintsTotal: 0 }
   if (!silent) {
-    if (recorded.hintsExtracted > 0) {
+    if (!shouldRecord) {
+      console.log("  recording disabled")
+    } else if (recorded.hintsExtracted > 0) {
       console.log(`  + ${recorded.hintsExtracted} new hint${recorded.hintsExtracted > 1 ? "s" : ""} saved (${recorded.hintsTotal} total)`)
     } else {
       console.log(`  no new hints extracted`)
