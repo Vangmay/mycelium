@@ -64,7 +64,7 @@ One `.env` at the repo root is loaded by both SDKs:
 
 ```bash
 TINYFISH_API_KEY=   # required only when using the TinyFish adapter
-OPENAI_API_KEY=     # optional; enables LLM hint extraction
+OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
 MYCELIUM_MOCK=1     # skip both APIs and use deterministic mocks
 MYCELIUM_STORE_PATH=./js/.mycelium   # override the default store location
 ```

@@ -51,7 +51,7 @@ cp .env.example .env
 
 ```bash
 TINYFISH_API_KEY=   # required only for the TinyFish adapter
-OPENAI_API_KEY=     # optional; enables LLM extraction in js/core/recorder.ts
+OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
 MYCELIUM_MOCK=1     # set to skip external calls in demo/tool flows
 MYCELIUM_STORE_PATH=./js/.mycelium   # override default store location
 ```
