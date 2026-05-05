@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mycelium Explorer</title>
+  <style>
+    :root {
+      --bg: #f7f8f5;
+      --panel: #ffffff;
+      --ink: #1d2320;
+      --muted: #68736d;
+      --line: #dfe4dc;
+      --accent: #16735f;
+      --bad: #b43a2f;
+      --warn: #946600;
+      --good: #14723a;
+      --chip: #edf3ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+    header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 { font-size: 17px; margin: 0; font-weight: 700; }
+    main {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: calc(100vh - 56px);
+    }
+    aside {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+      overflow: auto;
+    }
+    section { padding: 18px; overflow: auto; }
+    .meta { color: var(--muted); font-size: 12px; }
+    .domain {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .domain.active { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+    .domain strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 12px 0 18px;
+    }
+    .stat, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .stat .value { font-size: 22px; font-weight: 700; }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: var(--panel);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 7px; vertical-align: top; text-align: left; }
+    th { color: var(--muted); font-weight: 600; background: #fafbf8; position: sticky; top: 0; }
+    .chip {
+      display: inline-block;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin: 1px 3px 1px 0;
+      font-size: 12px;
+    }
+    .ok { color: var(--good); font-weight: 700; }
+    .fail { color: var(--bad); font-weight: 700; }
+    .warn { color: var(--warn); font-weight: 700; }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #111814;
+      color: #e7f4ed;
+      border-radius: 8px;
+      padding: 14px;
+      max-height: 520px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      font: inherit;
+      background: white;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    button.primary {
+      border: 0;
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+    .empty {
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: var(--panel);
+    }
+    @media (max-width: 850px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: 260px; }
+      .grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mycelium Explorer</h1>
+    <div class="meta" id="storeMeta">loading store...</div>
+  </header>
+  <main>
+    <aside>
+      <div class="meta" style="margin-bottom: 8px;">Domains</div>
+      <div id="domains"></div>
+    </aside>
+    <section>
+      <div id="content" class="empty">Select a domain to inspect learned knowledge.</div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      domains: [],
+      selected: null,
+      detail: null,
+      tab: "hints",
+      graph: null,
+      benchFiles: [],
+      benchResult: null,
+    }
+
+    const $ = (id) => document.getElementById(id)
+    const pct = (v) => `${Math.round((v || 0) * 100)}%`
+    const secs = (ms) => ms ? `${(ms / 1000).toFixed(1)}s` : ""
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]))
+
+    init().catch((err) => {
+      $("content").innerHTML = `<div class="empty">${esc(err.message)}</div>`
+    })
+
+    async function init() {
+      const health = await getJson("/api/health")
+      $("storeMeta").textContent = `store: ${health.storePath}`
+      state.domains = await getJson("/api/domains")
+      renderDomains()
+      if (state.domains[0]) await selectDomain(state.domains[0].domain)
+    }
+
+    async function selectDomain(domain) {
+      state.selected = domain
+      state.detail = await getJson(`/api/domain/${encodeURIComponent(domain)}`)
+      state.tab = "hints"
+      renderDomains()
+      renderContent()
+    }
+
+    function renderDomains() {
+      $("domains").innerHTML = state.domains.length
+        ? state.domains.map((d) => `
+          <button class="domain ${d.domain === state.selected ? "active" : ""}" onclick="selectDomain('${esc(d.domain)}')">
+            <strong>${esc(d.domain)}</strong>
+            <span class="meta">${d.runs} runs · ${pct(d.successRate)} success · ${d.hintsCount} hints</span>
+          </button>
+        `).join("")
+        : `<div class="empty">No domains recorded yet.</div>`
+    }
+
+    function renderContent() {
+      const d = state.detail
+      if (!d) return
+      const s = d.stats
+      $("content").innerHTML = `
+        <h2 style="margin:0 0 4px">${esc(s.domain)}</h2>
+        <div class="meta">updated ${esc(String(s.updated).split("T")[0])}</div>
+        <div class="grid">
+          ${stat("Runs", s.runs)}
+          ${stat("Success", pct(s.successRate))}
+          ${stat("Hints", s.hintsCount)}
+          ${stat("Avg Confidence", pct(s.avgConfidence))}
+        </div>
+        <div class="tabs">
+          ${tab("hints", "Hints")}
+          ${tab("runs", "Runs")}
+          ${tab("patterns", "Patterns")}
+          ${tab("prompt", "Prompt Preview")}
+          ${tab("bench", "Benchmarks")}
+          ${tab("graph", "Raw Graph")}
+        </div>
+        <div class="panel">${renderTab()}</div>
+      `
+    }
+
+    function stat(label, value) {
+      return `<div class="stat"><div class="meta">${label}</div><div class="value">${esc(value)}</div></div>`
+    }
+
+    function tab(id, label) {
+      return `<button class="tab ${state.tab === id ? "active" : ""}" onclick="setTab('${id}')">${label}</button>`
+    }
+
+    async function setTab(tab) {
+      state.tab = tab
+      if (tab === "graph" && !state.graph) state.graph = await getJson("/api/graph")
+      if (tab === "bench" && state.benchFiles.length === 0) state.benchFiles = await getJson("/api/bench/results")
+      renderContent()
+    }
+
+    function renderTab() {
+      if (state.tab === "hints") return renderHints()
+      if (state.tab === "runs") return renderRuns()
+      if (state.tab === "patterns") return renderPatterns()
+      if (state.tab === "prompt") return renderPrompt()
+      if (state.tab === "bench") return renderBench()
+      return renderGraph()
+    }
+
+    function renderHints() {
+      const hints = state.detail.hints || []
+      if (!hints.length) return `<div class="empty">No hints for this domain yet.</div>`
+      return `
+        <table>
+          <thead><tr><th>Confidence</th><th>Type</th><th>Knowledge</th><th>Source</th><th>Evidence</th></tr></thead>
+          <tbody>${hints.map((h) => `
+            <tr>
+              <td><strong>${pct(h.confidence)}</strong></td>
+              <td>${esc(h.type)}<br>${(h.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</td>
+              <td><strong>${esc(h.note)}</strong><br><span class="meta">${esc(h.action)}</span></td>
+              <td>${esc(h.source || "auto")}</td>
+              <td>${h.seen} seen<br><span class="meta">last ${esc(h.last)}</span></td>
+            </tr>
+          `).join("")}</tbody>
+        </table>
+      `
+    }
+
+    function renderRuns() {
+      const runs = state.detail.runs || []
+      if (!runs.length) return `<div class="empty">No runs for this domain yet.</div>`
+      return `
+        <table>
+          <thead><tr><th>Status</th><th>Goal</th><th>Duration</th><th>Hints</th><th>Errors</th></tr></thead>
+          <tbody>${runs.map((r) => {
+            const p = r.properties || {}
+            const errors = Array.isArray(p.errors) ? p.errors : []
+            return `<tr>
+              <td class="${p.success ? "ok" : "fail"}">${p.success ? "success" : "failed"}</td>
+              <td>${esc(p.goal || "")}<br><span class="meta">${esc(r.created_at)}</span></td>
+              <td>${secs(p.durationMs)}</td>
+              <td>${r.hintsUsed} used<br>${r.hintsLearned} learned</td>
+              <td>${errors.length ? errors.map(esc).join("<br>") : "<span class='meta'>none</span>"}</td>
+            </tr>`
+          }).join("")}</tbody>
+        </table>
+      `
+    }
+
+    function renderPatterns() {
+      const patterns = state.detail.patterns || []
+      if (!patterns.length) return `<div class="empty">No pattern tags for this domain yet.</div>`
+      return `
+        <table>
+          <thead><tr><th>Pattern</th><th>Hints</th><th>Evidence Runs</th><th>Last Seen</th></tr></thead>
+          <tbody>${patterns.map((p) => `
+            <tr>
+              <td><strong>${esc(p.name)}</strong></td>
+              <td>${p.hints}</td>
+              <td>${p.evidenceRuns}</td>
+              <td>${esc(p.lastSeen || "")}</td>
+            </tr>
+          `).join("")}</tbody>
+        </table>
+      `
+    }
+
+    function renderPrompt() {
+      return `
+        <div class="form-row">
+          <div>
+            <label class="meta">Domain</label>
+            <input id="promptDomain" value="${esc(state.selected)}" />
+          </div>
+          <div>
+            <label class="meta">Goal</label>
+            <textarea id="promptGoal">open a public page and summarize it</textarea>
+          </div>
+          <button class="primary" onclick="previewPrompt()">Preview</button>
+        </div>
+        <pre id="promptOut">Enter a goal and click Preview.</pre>
+      `
+    }
+
+    async function previewPrompt() {
+      const domain = $("promptDomain").value.trim()
+      const goal = $("promptGoal").value.trim()
+      const out = await getJson(`/api/prompt-preview?domain=${encodeURIComponent(domain)}&goal=${encodeURIComponent(goal)}`)
+      $("promptOut").textContent = out.prompt
+    }
+
+    function renderBench() {
+      if (!state.benchFiles.length) return `<div class="empty">No benchmark result JSON files found.</div>`
+      return `
+        <div class="form-row" style="grid-template-columns:minmax(0,1fr) auto">
+          <select id="benchFile">${state.benchFiles.map((f) => `<option value="${esc(f.file)}">${esc(f.file)} · ${f.rows} rows · ${f.flags} flags</option>`).join("")}</select>
+          <button class="primary" onclick="loadBench()">Load</button>
+        </div>
+        <div id="benchOut">${state.benchResult ? renderBenchResult() : "<div class='empty'>Select a result file.</div>"}</div>
+      `
+    }
+
+    async function loadBench() {
+      const file = $("benchFile").value
+      state.benchResult = await getJson(`/api/bench/results/${encodeURIComponent(file)}`)
+      renderContent()
+    }
+
+    function renderBenchResult() {
+      const r = state.benchResult
+      const flags = r.regressionFlags || []
+      const tasks = r.taskSummaries || []
+      return `
+        <div class="meta" style="margin-bottom:8px">${esc(r.ts || "")}</div>
+        ${flags.length ? `<h3>Regression Flags</h3><table><tbody>${flags.map((f) => `
+          <tr><td class="${f.severity === "fail" ? "fail" : "warn"}">${esc(f.severity)}</td><td>${esc(f.taskId)}</td><td>${esc(f.flag)}</td><td>${esc(f.message)}</td></tr>
+        `).join("")}</tbody></table>` : `<div class="empty">No regression flags.</div>`}
+        <h3>Tasks</h3>
+        <table>
+          <thead><tr><th>Task</th><th>Cold</th><th>Primed</th><th>Delta Success</th><th>Delta Time</th></tr></thead>
+          <tbody>${tasks.map((t) => `
+            <tr>
+              <td>${esc(t.taskId)}</td>
+              <td>${pct(t.cold.successRate)} · ${secs(t.cold.avgDurationMs)}</td>
+              <td>${pct(t.primed.successRate)} · ${secs(t.primed.avgDurationMs)} · ${t.primed.avgHintsLoaded.toFixed(1)} hints</td>
+              <td>${t.deltas.primedVsColdSuccessPts.toFixed(1)} pts</td>
+              <td>${secs(t.deltas.primedVsColdAvgDurationMs)}</td>
+            </tr>
+          `).join("")}</tbody>
+        </table>
+      `
+    }
+
+    function renderGraph() {
+      if (!state.graph) return `<div class="empty">Loading graph...</div>`
+      return `
+        <div class="grid">
+          ${stat("Nodes", state.graph.nodes.length)}
+          ${stat("Edges", state.graph.edges.length)}
+          ${stat("Hints", state.graph.nodes.filter((n) => n.type === "Hint").length)}
+          ${stat("Runs", state.graph.nodes.filter((n) => n.type === "Run").length)}
+        </div>
+        <pre>${esc(JSON.stringify(state.graph, null, 2))}</pre>
+      `
+    }
+
+    async function getJson(url) {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(await res.text())
+      return res.json()
+    }
+  </script>
+</body>
+</html>

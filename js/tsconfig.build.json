@@ -15,6 +15,7 @@
     "adapters/**/*.ts",
     "bench/**/*.ts",
     "core/**/*.ts",
+    "explorer/**/*.ts",
     "store/**/*.ts",
     "tools/**/*.ts"
   ],

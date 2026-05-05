@@ -17,6 +17,7 @@
   },
   "files": [
     "dist",
+    "explorer/public",
     "README.md",
     "LICENSE"
   ],
@@ -26,6 +27,7 @@
   "scripts": {
     "run:tools": "tsx tools/index.ts",
     "bench": "tsx bench/run-benchmark.ts",
+    "explorer": "tsx explorer/server.ts",
     "demo": "tsx demo/run-demo.ts",
     "typecheck": "tsc --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/tools/index.js",
