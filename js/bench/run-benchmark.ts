@@ -29,6 +29,36 @@ interface BenchRow {
   promptChars: number
 }
 
+interface PhaseStats {
+  runs: number
+  successRate: number
+  avgDurationMs: number
+  medianDurationMs: number
+  avgHintsLoaded: number
+  avgHintsExtracted: number
+  blockedErrors: number
+}
+
+interface TaskSummary {
+  taskId: string
+  url: string
+  cold: PhaseStats
+  learn: PhaseStats
+  primed: PhaseStats
+  deltas: {
+    primedVsColdSuccessPts: number
+    primedVsColdAvgDurationMs: number
+    primedVsColdBlockedErrors: number
+  }
+}
+
+interface RegressionFlag {
+  taskId: string
+  flag: string
+  severity: "warn" | "fail"
+  message: string
+}
+
 interface CliOptions {
   tasksPath: string
   repeats: number
@@ -82,6 +112,8 @@ writeFileSync(args.outPath, JSON.stringify({
   options: args,
   rows,
   summary: summarize(rows),
+  taskSummaries: summarizeTasks(rows),
+  regressionFlags: regressionFlags(rows),
 }, null, 2))
 
 printSummary(rows)
@@ -166,6 +198,8 @@ function summarize(input: BenchRow[]) {
 
 function printSummary(input: BenchRow[]) {
   const summary = summarize(input)
+  const taskSummaries = summarizeTasks(input)
+  const flags = regressionFlags(input)
   console.log("Summary")
   console.log("phase    runs  success  avg time  med time  hints loaded  hints learned")
   console.log("-----------------------------------------------------------------------")
@@ -187,6 +221,128 @@ function printSummary(input: BenchRow[]) {
   console.log()
   console.log(`Primed vs cold success: ${pctDelta(primed.successRate, cold.successRate)}`)
   console.log(`Primed vs cold avg time: ${timeDelta(primed.avgDurationMs, cold.avgDurationMs)}`)
+
+  console.log()
+  console.log("Per-task")
+  console.log("taskId              cold ok  primed ok  cold avg  primed avg  hints  flags")
+  console.log("----------------------------------------------------------------------------")
+  for (const t of taskSummaries) {
+    const taskFlags = flags.filter((f) => f.taskId === t.taskId)
+    console.log([
+      t.taskId.padEnd(18),
+      `${Math.round(t.cold.successRate * 100)}%`.padStart(7),
+      `${Math.round(t.primed.successRate * 100)}%`.padStart(9),
+      `${(t.cold.avgDurationMs / 1000).toFixed(1)}s`.padStart(8),
+      `${(t.primed.avgDurationMs / 1000).toFixed(1)}s`.padStart(10),
+      t.primed.avgHintsLoaded.toFixed(1).padStart(5),
+      taskFlags.length === 0 ? "" : taskFlags.map((f) => f.flag).join(","),
+    ].join("  "))
+  }
+
+  if (flags.length > 0) {
+    console.log()
+    console.log("Regression flags")
+    for (const f of flags) {
+      const label = f.severity === "fail" ? "FAIL" : "WARN"
+      console.log(`  [${label}] ${f.taskId}: ${f.message}`)
+    }
+  }
+}
+
+function summarizeTasks(input: BenchRow[]): TaskSummary[] {
+  const taskIds = [...new Set(input.map((r) => r.taskId))]
+  return taskIds.map((taskId) => {
+    const first = input.find((r) => r.taskId === taskId)!
+    const cold = phaseStats(input.filter((r) => r.taskId === taskId && r.phase === "cold"))
+    const learn = phaseStats(input.filter((r) => r.taskId === taskId && r.phase === "learn"))
+    const primed = phaseStats(input.filter((r) => r.taskId === taskId && r.phase === "primed"))
+    return {
+      taskId,
+      url: first.url,
+      cold,
+      learn,
+      primed,
+      deltas: {
+        primedVsColdSuccessPts: (primed.successRate - cold.successRate) * 100,
+        primedVsColdAvgDurationMs: primed.avgDurationMs - cold.avgDurationMs,
+        primedVsColdBlockedErrors: primed.blockedErrors - cold.blockedErrors,
+      },
+    }
+  })
+}
+
+function phaseStats(rows: BenchRow[]): PhaseStats {
+  return {
+    runs: rows.length,
+    successRate: avg(rows.map((r) => r.success ? 1 : 0)),
+    avgDurationMs: avg(rows.map((r) => r.durationMs)),
+    medianDurationMs: median(rows.map((r) => r.durationMs)),
+    avgHintsLoaded: avg(rows.map((r) => r.hintsLoaded)),
+    avgHintsExtracted: avg(rows.map((r) => r.hintsExtracted)),
+    blockedErrors: rows.filter(hasBlockedError).length,
+  }
+}
+
+function regressionFlags(input: BenchRow[]): RegressionFlag[] {
+  const flags: RegressionFlag[] = []
+  for (const t of summarizeTasks(input)) {
+    if (t.deltas.primedVsColdSuccessPts <= -20) {
+      flags.push({
+        taskId: t.taskId,
+        flag: "success_drop",
+        severity: "fail",
+        message: `Primed success dropped from ${pct(t.cold.successRate)} to ${pct(t.primed.successRate)}`,
+      })
+    }
+
+    if (t.cold.avgDurationMs > 0 && t.primed.avgDurationMs > t.cold.avgDurationMs * 1.25) {
+      flags.push({
+        taskId: t.taskId,
+        flag: "duration_increase",
+        severity: "warn",
+        message: `Primed avg time increased from ${secs(t.cold.avgDurationMs)} to ${secs(t.primed.avgDurationMs)}`,
+      })
+    }
+
+    if (t.deltas.primedVsColdBlockedErrors > 0) {
+      flags.push({
+        taskId: t.taskId,
+        flag: "blocked_error_increase",
+        severity: "fail",
+        message: `Primed blocked errors increased from ${t.cold.blockedErrors} to ${t.primed.blockedErrors}`,
+      })
+    }
+
+    if (
+      t.primed.avgHintsLoaded > 0
+      && t.primed.successRate <= t.cold.successRate
+      && t.primed.avgDurationMs >= t.cold.avgDurationMs
+    ) {
+      flags.push({
+        taskId: t.taskId,
+        flag: "hints_loaded_but_no_improvement",
+        severity: "warn",
+        message: `Primed loaded ${t.primed.avgHintsLoaded.toFixed(1)} hints but did not improve success or time`,
+      })
+    }
+
+    const coldRows = input.filter((r) => r.taskId === t.taskId && r.phase === "cold")
+    const primedRows = input.filter((r) => r.taskId === t.taskId && r.phase === "primed")
+    const paired = Math.min(coldRows.length, primedRows.length)
+    let pairedRegressions = 0
+    for (let i = 0; i < paired; i++) {
+      if (coldRows[i].success && !primedRows[i].success) pairedRegressions++
+    }
+    if (pairedRegressions > 0) {
+      flags.push({
+        taskId: t.taskId,
+        flag: "primed_failure_after_cold_success",
+        severity: "fail",
+        message: `${pairedRegressions}/${paired} paired runs succeeded cold but failed primed`,
+      })
+    }
+  }
+  return flags
 }
 
 function parseArgs(argv: string[]): CliOptions {
@@ -259,3 +415,14 @@ function timeDelta(next: number, prev: number): string {
   return `${sign}${(delta / 1000).toFixed(1)}s`
 }
 
+function hasBlockedError(row: BenchRow): boolean {
+  return row.errors.some((err) => /\b(blocked|captcha|access denied|forbidden|403)\b/i.test(err))
+}
+
+function pct(v: number): string {
+  return `${Math.round(v * 100)}%`
+}
+
+function secs(ms: number): string {
+  return `${(ms / 1000).toFixed(1)}s`
+}
