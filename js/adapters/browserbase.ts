@@ -85,9 +85,8 @@ async function loadOptional(
   loader: (() => Promise<any>) | undefined,
   message: string,
 ) {
-  if (loader) return loader()
   try {
-    return await dynamicImport(packageName)
+    return loader ? await loader() : await dynamicImport(packageName)
   } catch (error: any) {
     if (error?.code === "ERR_MODULE_NOT_FOUND" || error?.code === "MODULE_NOT_FOUND") {
       throw new Error(message)

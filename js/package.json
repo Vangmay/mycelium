@@ -29,6 +29,7 @@
     "bench": "tsx bench/run-benchmark.ts",
     "explorer": "tsx explorer/server.ts",
     "demo": "tsx demo/run-demo.ts",
+    "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/tools/index.js",
     "prepublishOnly": "npm run build"
