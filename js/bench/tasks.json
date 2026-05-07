@@ -18,10 +18,5 @@
     "id": "reddit-typescript",
     "url": "reddit.com",
     "goal": "open a public Reddit post about TypeScript and summarize the visible discussion"
-  },
-  {
-    "id": "reddit-typescript",
-    "url": "reddit.com",
-    "goal": "open a public Reddit post about TypeScript and summarize the visible discussion"
   }
 ]
