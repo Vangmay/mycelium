@@ -5,7 +5,6 @@
   "description": "Monorepo root for Mycelium — JS SDK+CLI (js/), Python SDK (python/), and web UI (server/)",
   "scripts": {
     "install:js": "npm --prefix js install",
-    "demo": "npm --prefix js run demo",
     "typecheck": "npm --prefix js run typecheck",
     "build": "npm --prefix js run build",
     "tools": "npm --prefix js run run:tools --",

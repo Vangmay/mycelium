@@ -32,8 +32,6 @@ The JS store is embedded SQLite plus sqlite-vec. No hosted server, no model trai
 ```bash
 # From the repo root (all scripts forward into js/)
 npm run install:js         # install JS deps
-npm run demo:mock          # offline demo, no API credits
-npm run demo               # real API calls
 npm run tools -- run <url> <goal>
 npm run typecheck
 npm run build              # produces js/dist/
@@ -52,11 +50,10 @@ cp .env.example .env
 ```bash
 TINYFISH_API_KEY=   # required only for the TinyFish adapter
 OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
-MYCELIUM_MOCK=1     # set to skip external calls in demo/tool flows
 MYCELIUM_STORE_PATH=./js/.mycelium   # override default store location
 ```
 
-**Never load dotenv in library files** (`js/core/`, `js/store/`). Only entry points (`js/tools/index.ts`, `js/demo/run-demo.ts`, `server/server.ts`) load env via `load-env.ts`.
+**Never load dotenv in library files** (`js/core/`, `js/store/`). Only entry points (`js/tools/index.ts`, `js/explorer/server.ts`, `server/server.ts`) load env via `load-env.ts`.
 
 ## Commands
 
@@ -92,7 +89,6 @@ js/
 │   ├── types.ts          # Hint, RunOutcome
 │   └── graph/            # SQLite graph, traversal, embeddings, queries
 ├── tools/                # optional local inspection/debugging wrappers
-├── demo/                 # 5-session hackathon demo arc
 ├── examples/             # basic-sdk.ts, advanced-sdk.ts, basic-cli.sh, batch-tasks.json
 └── .mycelium/            # default store location for dev
 ```
@@ -161,10 +157,6 @@ interface RunHistoryEntry {
 
 Trust is slow to earn, quick to lose. Stale selectors should stop being injected without manual intervention.
 
-## Mock mode
-
-`MYCELIUM_MOCK=1` is kept for demo/tool flows that need to avoid external provider calls. The modern JS runtime is adapter-based, so provider-specific mocking belongs at the adapter boundary.
-
 ## TinyFish adapter SSE parsing
 
 TinyFish streams responses as server-sent events. `tinyfishAdapter()` in `js/adapters/tinyfish.ts` parses them:
@@ -192,7 +184,7 @@ Default `./.mycelium/` relative to cwd. Override via `MYCELIUM_STORE_PATH`. The 
 1. Add the new type to the `HintType` union in `js/store/types.ts` **and** the `HintType` literal in `python/src/mycelium/types.py`
 2. Add a description line to the `EXTRACT_SYSTEM` prompt in `js/core/recorder.ts` and `python/src/mycelium/recorder.py`
 3. Add a colour entry in `js/tools/inspect.ts` TYPE_COLOURS map
-4. Add a friction entry in `js/core/mock.ts` MOCK_HINTS (and `python/src/mycelium/mock.py`) if you want mock support
+4. Add docs/examples for when the new hint type should be emitted
 
 ## SDK usage
 

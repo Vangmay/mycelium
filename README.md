@@ -33,9 +33,6 @@ cd mycelium
 cp .env.example .env               # fill in provider keys as needed
 npm run install:js                 # installs JS deps
 
-# Demo — no API credits needed
-npm run demo:mock
-
 # Optional local tools
 npm run tools -- run amazon.com "find the price of Kindle Paperwhite"
 npm run tools -- inspect amazon.com
@@ -51,8 +48,6 @@ All forward to `js/`:
 | Command | What it runs |
 |---------|--------------|
 | `npm run install:js` | `npm install` inside `js/` |
-| `npm run demo` | `tsx demo/run-demo.ts` (real API calls) |
-| `npm run demo:mock` | `MYCELIUM_MOCK=1 tsx demo/run-demo.ts` |
 | `npm run tools -- <args>` | `tsx tools/index.ts <args>` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Build publishable `dist/` in `js/` |
@@ -65,7 +60,6 @@ One `.env` at the repo root is loaded by both SDKs:
 ```bash
 TINYFISH_API_KEY=   # required only when using the TinyFish adapter
 OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
-MYCELIUM_MOCK=1     # skip both APIs and use deterministic mocks
 MYCELIUM_STORE_PATH=./js/.mycelium   # override the default store location
 ```
 

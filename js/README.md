@@ -118,14 +118,13 @@ From the repo root:
 
 ```bash
 npm run install:js
-npm run demo:mock              # 5-session learning arc, offline
 npm run build                  # writes js/dist/ for publishing
 ```
 
 From inside `js/` directly:
 
 ```bash
-npm run demo:mock
+npm test
 npm run build
 ```
 
@@ -137,7 +136,6 @@ Loaded by [load-env.ts](load-env.ts) from `js/.env` and `../ .env` (repo root) �
 TINYFISH_API_KEY=   # required only when using tinyfishAdapter()
 OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
 MYCELIUM_LLM_EXTRACT=1  # optional; opt in to LLM hint extraction
-MYCELIUM_MOCK=1     # skip both APIs entirely
 MYCELIUM_STORE_PATH=./.mycelium   # override default store location
 ```
 
@@ -154,15 +152,13 @@ js/
 ├── core/
 │   ├── runner.ts         run() — prime → adapter → record
 │   ├── prime.ts          prime(), buildGoal()
-│   ├── recorder.ts       record() — rule hints + optional GPT-4o-mini extraction
-│   └── mock.ts           offline mock responses
+│   └── recorder.ts       record() — rule hints + optional GPT-4o-mini extraction
 ├── analyzer/
 │   └── classifier.ts     deterministic web-automation symptoms → hints
 ├── store/
 │   ├── types.ts          Hint, RunOutcome
 │   └── graph/            SQLite graph, traversal, embeddings, queries
 ├── tools/                optional `myc` inspection/debugging wrappers
-├── demo/                 5-session demo arc
 └── examples/             basic-sdk.ts, advanced-sdk.ts, ...
 ```
 
