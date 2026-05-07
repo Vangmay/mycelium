@@ -45,6 +45,22 @@
     "sqlite-vec": "^0.1.9",
     "tsx": "^4.7.0"
   },
+  "peerDependencies": {
+    "@browserbasehq/sdk": "^2.0.0",
+    "playwright": "^1.40.0",
+    "playwright-core": "^1.40.0"
+  },
+  "peerDependenciesMeta": {
+    "@browserbasehq/sdk": {
+      "optional": true
+    },
+    "playwright": {
+      "optional": true
+    },
+    "playwright-core": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",

@@ -7,6 +7,8 @@ export { prime, buildGoal } from "./core/prime.ts"
 export { record } from "./core/recorder.ts"
 export { classifyOutcome } from "./analyzer/classifier.ts"
 export { tinyfishAdapter } from "./adapters/tinyfish.ts"
+export { playwrightAdapter } from "./adapters/playwright.ts"
+export { browserbaseAdapter } from "./adapters/browserbase.ts"
 export {
   domainStats,
   listDomains,
@@ -16,11 +18,21 @@ export {
 } from "./store/graph/queries.ts"
 export type { RunOptions, RunResult } from "./core/runner.ts"
 export type {
+  AdapterHandler,
+  AdapterHandlerResult,
   WebAgentAdapter,
   WebAgentRunInput,
   WebAgentRunResult,
 } from "./adapters/types.ts"
 export type { TinyFishAdapterOptions } from "./adapters/tinyfish.ts"
+export type {
+  PlaywrightAdapterOptions,
+  PlaywrightHandlerContext,
+} from "./adapters/playwright.ts"
+export type {
+  BrowserbaseAdapterOptions,
+  BrowserbaseHandlerContext,
+} from "./adapters/browserbase.ts"
 export type { PrimeResult } from "./core/prime.ts"
 export type { RecordResult, RecordOptions } from "./core/recorder.ts"
 export type { Hint, RunOutcome, HintType } from "./store/types.ts"
