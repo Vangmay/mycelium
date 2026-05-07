@@ -55,6 +55,52 @@ console.log(result.primed.hintsLoaded)
 console.log(result.recorded.hintsExtracted)
 ```
 
+## Adapter model
+
+Mycelium is a memory layer, not a replacement for every browser agent.
+
+- `tinyfishAdapter()` wraps an autonomous web-agent provider. TinyFish interprets the goal and drives the browser.
+- `playwrightAdapter()` wraps a local Playwright browser runtime. You provide the handler or LLM browser agent that decides what to do.
+- `browserbaseAdapter()` wraps a Browserbase cloud browser session. You provide the handler or LLM browser agent that decides what to do.
+
+That means a Playwright or Browserbase integration usually looks like this:
+
+```typescript
+import { run, playwrightAdapter } from "mycelium"
+
+const result = await run({
+  url: "example.com",
+  goal: "summarize the page",
+  adapter: playwrightAdapter({
+    handler: async ({ page, input }) => {
+      // input.goal already includes Mycelium's past observations when any exist.
+      // Replace this with your OpenAI, Anthropic, Stagehand, LangGraph, or
+      // in-house browser agent loop.
+      await page.goto(input.url)
+      const title = await page.title()
+      const text = await page.locator("body").innerText()
+
+      return {
+        success: true,
+        steps: ["opened page", "read visible text"],
+        data: { title, text: text.slice(0, 1000) },
+        raw: text,
+      }
+    },
+  }),
+})
+
+console.log(result.data)
+```
+
+The upside is provider independence: whatever browser agent you run, using whatever LLM, can still learn from past sessions through Mycelium.
+
+See:
+
+- [examples/playwright-sdk.ts](examples/playwright-sdk.ts)
+- [examples/browserbase-sdk.ts](examples/browserbase-sdk.ts)
+- [examples/custom-agent-handler.ts](examples/custom-agent-handler.ts)
+
 ## Local tools
 
 ```bash
