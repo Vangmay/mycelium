@@ -1,216 +1,95 @@
 # Mycelium
 
-Self-improving memory layer for web agents. Mycelium primes any provider with domain knowledge, records the outcome, and stores reusable hints in a local graph. TinyFish is now one adapter, not the core architecture.
+Memory and learning layer for browser agents. Mycelium primes a browser-agent run with domain knowledge, records the outcome, and stores reusable hints in a local SQLite graph. TinyFish is one autonomous adapter; Playwright and Browserbase are runtime adapters for user-provided browser-agent logic.
 
-## Repository layout
+## Repository Layout
 
-```
+```text
 .
-├── js/          JavaScript / TypeScript SDK and optional local tools
-├── python/      Python SDK (PyPI: "mycelium-sdk")
-├── server/      Web UI that imports from ../js/
-├── package.json Root scripts — all delegate to js/
-└── .env         Single shared env file, loaded by both SDKs
+├── js/          JavaScript / TypeScript SDK, adapters, benchmarks, explorer, and tools
+├── package.json Root scripts that delegate to js/
+└── .env         Optional shared env file for local entry points
 ```
-
-The JS SDK now uses an embedded SQLite graph store. The older Python SDK still uses the previous JSON-store format.
-
-## What this project does
-
-Every web-agent provider call starts stateless. Mycelium fixes this with three steps per run:
-
-1. **prime(domain, goal)** — reads the graph, applies confidence/decay, injects surviving hints into the agent's goal prompt as natural language
-2. **adapter.run({ url, goal })** — calls TinyFish, Stagehand, Playwright, or another provider and returns a normalized result
-3. **record(outcome)** — runs deterministic web rules plus optional LLM extraction, then writes structured hints back to the graph
-
-The JS store is embedded SQLite plus sqlite-vec. No hosted server, no model training.
 
 ## Runtime
 
-**Node.js + tsx** — TypeScript is executed directly via `tsx`. No compilation step for development; `npm run build` emits `dist/` for publishing.
+TypeScript runs through `tsx` during development. `npm run build` emits publishable files under `js/dist/`.
 
 ```bash
-# From the repo root (all scripts forward into js/)
-npm run install:js         # install JS deps
-npm run tools -- run <url> <goal>
+npm run install:js
 npm run typecheck
-npm run build              # produces js/dist/
+npm test
+npm run build
+npm run tools -- inspect example.com
 ```
-
-Inside `js/` directly, the same scripts exist without the `--` hop.
 
 ## Environment
 
-Loaded by `js/load-env.ts`, which tries `js/.env` then the repo-root `.env`. One file at the root works for both SDKs.
+`js/load-env.ts` tries `js/.env` and then repo-root `.env`. Do not load dotenv in library files under `js/core/` or `js/store/`; only local entry points such as tools and explorer should load env.
 
 ```bash
-cp .env.example .env
+TINYFISH_API_KEY=          # required only for tinyfishAdapter()
+OPENAI_API_KEY=            # optional; LLM extraction and OpenAI embeddings
+MYCELIUM_LLM_EXTRACT=1     # optional; opt in to LLM hint extraction
+MYCELIUM_STORE_PATH=./js/.mycelium
 ```
 
-```bash
-TINYFISH_API_KEY=   # required only for the TinyFish adapter
-OPENAI_API_KEY=     # optional; used when LLM extraction or OpenAI embeddings are enabled
-MYCELIUM_STORE_PATH=./js/.mycelium   # override default store location
-```
+## JS Structure
 
-**Never load dotenv in library files** (`js/core/`, `js/store/`). Only entry points (`js/tools/index.ts`, `js/explorer/server.ts`, `server/server.ts`) load env via `load-env.ts`.
-
-## Commands
-
-All runnable from the repo root via `npm run …`, or from inside `js/` with the same names (without `--`):
-
-```bash
-npm run tools -- run <url> <goal>    # run with prime + record
-npm run tools -- inspect <domain>    # coloured knowledge store view
-npm run tools -- stats [--all]       # success rate trend
-npm run tools -- history <domain>    # timestamped run timeline
-npm run tools -- replay <domain>     # re-run recent goals
-npm run tools -- batch <file>        # multi-domain run from JSON
-npm run tools -- clear <domain>      # wipe domain store
-```
-
-## Project structure (JS)
-
-```
+```text
 js/
 ├── index.ts              # SDK public exports
-├── mycelium.config.ts    # storePath, decayDays, minConfidence, maxHints
-├── load-env.ts           # multi-path dotenv loader (js/.env + ../.env)
-├── core/
-│   ├── runner.ts         # run() — orchestrates prime → adapter → record
-│   ├── prime.ts          # prime(), buildGoal()
-│   └── recorder.ts       # record() — rule hints + optional LLM extraction
-├── adapters/
-│   ├── types.ts          # provider adapter contract
-│   └── tinyfish.ts       # TinyFish adapter
-├── analyzer/
-│   └── classifier.ts     # deterministic web automation symptoms → hints
-├── store/
-│   ├── types.ts          # Hint, RunOutcome
-│   └── graph/            # SQLite graph, traversal, embeddings, queries
+├── adapters/             # TinyFish, Playwright, Browserbase, shared adapter contract
+├── core/                 # run(), prime(), buildGoal(), record()
+├── analyzer/             # deterministic web-automation symptoms -> hints
+├── store/graph/          # SQLite graph, traversal, embeddings, queries
 ├── tools/                # optional local inspection/debugging wrappers
-├── examples/             # basic-sdk.ts, advanced-sdk.ts, basic-cli.sh, batch-tasks.json
-└── .mycelium/            # default store location for dev
+├── explorer/             # local graph/prompt/benchmark explorer
+├── bench/                # benchmark runner and task definitions
+├── test/                 # Node test runner tests
+└── examples/             # SDK and adapter examples
 ```
 
-## Project structure (Python)
+## Adapter Model
 
-```
-python/
-├── pyproject.toml
-├── README.md
-└── src/mycelium/
-    ├── __init__.py        # run, prime, record, build_goal, types
-    ├── runner.py          # run() + SSE call via httpx
-    ├── prime.py           # prime(), build_goal()
-    ├── recorder.py        # record() — OpenAI extraction
-    ├── store.py           # read_store, apply_decay, filter_hints, merge_hints, ...
-    ├── mock.py            # get_mock_response, get_mock_hints
-    ├── types.py           # Hint, DomainStore, RunOutcome dataclasses
-    └── config.py          # Config + MYCELIUM_STORE_PATH env override
-```
+- `tinyfishAdapter()` wraps an autonomous web-agent provider.
+- `playwrightAdapter()` wraps local Playwright browser runtime; users provide the handler or LLM browser agent.
+- `browserbaseAdapter()` wraps a Browserbase cloud browser session; users provide the handler or LLM browser agent.
 
-Public surface mirrors the older JS SDK shape, but attribute names are snake_case (`hints_loaded`, `hints_extracted`, `hints_total`, `duration_ms`).
+Do not make Playwright or Browserbase pretend to be autonomous agents. Their handlers receive the already-primed `input.goal`, execute browser logic, and return normalized run data for Mycelium to record.
 
-## Key types
+## Local Artifacts
 
-```typescript
-// js/store/types.ts
-type HintType = "blocker" | "selector" | "timing" | "flow" | "failure" | "auth" | "rate_limit"
+These are ignored by git:
 
-interface Hint {
-  id: string
-  type: HintType
-  note: string          // max 100 chars
-  action: string        // max 150 chars — what the agent should do
-  confidence: number    // 0.0 – 1.0, starts at 0.65, max 0.99
-  seen: number          // confirmed run count
-  last: string          // YYYY-MM-DD
-}
-
-interface DomainStore {
-  domain: string
-  updated: string       // ISO datetime
-  runs: number
-  successRate: number   // 0.0 – 1.0, rolling average
-  hints: Hint[]
-  history: RunHistoryEntry[]
-}
-
-interface RunHistoryEntry {
-  ts: string            // ISO datetime
-  goal: string
-  success: boolean
-  hintsUsed: number
-  hintsAdded: number
-  durationMs?: number
-}
+```text
+js/.mycelium/
+js/.bench/
+*.db-shm
+*.db-wal
+dist/
+*.tgz
 ```
 
-## Confidence mechanics
+Keep reusable behavior in code, examples, and docs. Share graph knowledge intentionally by exporting or copying `MYCELIUM_STORE_PATH`, not by committing SQLite files by default.
 
-- New hint starts at **0.65**
-- Each confirmed run adds **+0.05** (capped at 0.99)
-- Not seen in `decayDays` (default 14) → confidence **halved** on next `prime()` call
-- Only hints with confidence ≥ `minConfidence` (default 0.6) are injected
-- Max `maxHints` (default 10) hints injected per session
+## Common Commands
 
-Trust is slow to earn, quick to lose. Stale selectors should stop being injected without manual intervention.
-
-## TinyFish adapter SSE parsing
-
-TinyFish streams responses as server-sent events. `tinyfishAdapter()` in `js/adapters/tinyfish.ts` parses them:
-
-```typescript
-event.type === "PROGRESS"  // agent navigation step — event.purpose
-event.type === "FAILED"    // agent error — event.message
-event.type === "COMPLETE"  // final extracted data — event.result or event.data
+```bash
+npm run tools -- run <url> <goal>    # TinyFish-backed debug run
+npm run tools -- inspect <domain>    # inspect learned hints
+npm run tools -- stats [--all]       # success trend
+npm run tools -- history <domain>    # run timeline
+npm run tools -- replay <domain>     # replay recent goals
+npm run tools -- clear <domain>      # wipe one domain
 ```
 
-Set `MYCELIUM_DEBUG=1` to print raw SSE lines if a real run returns no data.
+## Before Committing
 
-## Store file location
+Run:
 
-Default `./.mycelium/` relative to cwd. Override via `MYCELIUM_STORE_PATH`. The existing dev data lives at `js/.mycelium/`, so running from `js/` (or via the root-level npm scripts, which chain into `js/`) picks it up automatically.
-
-## Adding a new local tool command
-
-1. Create `js/tools/<name>.ts` — export `async function cmd<Name>(args) {}`
-2. Import and register in `js/tools/index.ts` using `program.command(...).action(cmd<Name>)`
-3. Implement using existing `js/core/` and `js/store/` functions — no product logic in the tool wrapper
-
-## Adding a new hint type
-
-1. Add the new type to the `HintType` union in `js/store/types.ts` **and** the `HintType` literal in `python/src/mycelium/types.py`
-2. Add a description line to the `EXTRACT_SYSTEM` prompt in `js/core/recorder.ts` and `python/src/mycelium/recorder.py`
-3. Add a colour entry in `js/tools/inspect.ts` TYPE_COLOURS map
-4. Add docs/examples for when the new hint type should be emitted
-
-## SDK usage
-
-```typescript
-import { run } from "mycelium"
-const result = await run({ url: "amazon.com", goal: "find Kindle price" })
-// result.primed    — { hintsLoaded, promptBlock }
-// result.recorded  — { hintsExtracted, hintsTotal }
+```bash
+npm run typecheck
+npm test
+npm run build
 ```
-
-```python
-from mycelium import run
-result = run("amazon.com", "find Kindle price")
-print(result.primed.hints_loaded, result.recorded.hints_total)
-```
-
-## Common issues
-
-**"no knowledge found" on every run** — store is writing to the wrong path. The default is `./.mycelium` relative to cwd. Either set `MYCELIUM_STORE_PATH=./js/.mycelium` or run from inside `js/`.
-
-**LLM extraction returns empty array** — the provider raw response may be too short or malformed. Set `MYCELIUM_DEBUG=1` to see the LLM response.
-
-**TinyFish SSE stream hangs / auth error** — `TINYFISH_API_KEY` not set or `.env` not copied. The loader checks both `js/.env` and repo-root `.env`.
-
-**"Cannot find module" errors** — deps not installed. From the root, `npm run install:js`.
-
-**TypeScript errors** — run `npm run typecheck`. All files must pass before committing.
-
-**dotenv not loading** — entry points must import `../load-env.ts` (not `dotenv/config` directly), so both env locations are tried.

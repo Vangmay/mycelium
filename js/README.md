@@ -1,18 +1,18 @@
-# mycelium (JavaScript / TypeScript)
+# Mycelium JavaScript SDK
 
-JS SDK for Mycelium, with optional local `myc` tools for inspection and debugging. Published as `mycelium` on npm.
+TypeScript SDK for adding memory to browser agents, with optional local `myc` tools for inspection and debugging. The package is currently named `@vangmay/mycelium`.
 
 ## Install
 
 ```bash
-npm install mycelium
+npm install @vangmay/mycelium
 ```
 
 ## SDK — two-phase integration
 
 ```typescript
 import 'dotenv/config'
-import { prime, buildGoal, record } from "mycelium"
+import { prime, buildGoal, record } from "@vangmay/mycelium"
 
 const url = "amazon.com"
 const domain = "amazon.com"
@@ -40,7 +40,7 @@ await record({
 ## SDK — adapter convenience
 
 ```typescript
-import { run, tinyfishAdapter } from "mycelium"
+import { run, tinyfishAdapter } from "@vangmay/mycelium"
 
 const result = await run({
   url: "amazon.com",
@@ -66,7 +66,7 @@ Mycelium is a memory layer, not a replacement for every browser agent.
 That means a Playwright or Browserbase integration usually looks like this:
 
 ```typescript
-import { run, playwrightAdapter } from "mycelium"
+import { run, playwrightAdapter } from "@vangmay/mycelium"
 
 const result = await run({
   url: "example.com",
@@ -118,6 +118,8 @@ From the repo root:
 
 ```bash
 npm run install:js
+npm run typecheck
+npm test --prefix js
 npm run build                  # writes js/dist/ for publishing
 ```
 
@@ -139,6 +141,19 @@ MYCELIUM_LLM_EXTRACT=1  # optional; opt in to LLM hint extraction
 MYCELIUM_STORE_PATH=./.mycelium   # override default store location
 ```
 
+## Local artifacts
+
+Mycelium writes local graph and benchmark data during development. These are intentionally ignored by git:
+
+```text
+.mycelium/      # SQLite graph store, relative to cwd or MYCELIUM_STORE_PATH
+.bench/         # benchmark results and benchmark stores
+*.db-shm
+*.db-wal
+```
+
+Commit reusable code, examples, and docs. Share graph knowledge by explicitly exporting or copying the configured store path, not by committing local SQLite files by default.
+
 ## Project layout
 
 ```
@@ -159,7 +174,10 @@ js/
 │   ├── types.ts          Hint, RunOutcome
 │   └── graph/            SQLite graph, traversal, embeddings, queries
 ├── tools/                optional `myc` inspection/debugging wrappers
-└── examples/             basic-sdk.ts, advanced-sdk.ts, ...
+├── explorer/             local graph/prompt/benchmark explorer
+├── bench/                benchmark runner and task definitions
+├── test/                 adapter and SDK tests
+└── examples/             SDK and adapter examples
 ```
 
 ## Publishing
